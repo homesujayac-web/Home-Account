@@ -136,6 +136,14 @@ tfoot td{font-weight:700;background:#f8fafc}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:#1c2430;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:.25s;z-index:200;pointer-events:none;font-size:14px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .fab{display:none}
+.sform{display:grid;grid-template-columns:2fr 1.3fr 1.2fr 1.5fr auto;gap:8px}
+.sform input{font-size:16px}
+@media(max-width:820px){.sform{grid-template-columns:1fr 1fr}.sform button{grid-column:1/-1;padding:11px}}
+.ck{width:32px;height:32px;flex-shrink:0;border-radius:9px;border:2px solid #c3ccd9;background:#fff;cursor:pointer;font-weight:700;font-size:17px;color:#fff;padding:0}
+.ck.on{background:var(--inc);border-color:var(--inc)}
+.row.done .t b{text-decoration:line-through;color:var(--mut)}
+.btn.wa{background:#25d366;border-color:#25d366;color:#fff;font-weight:600}
+.btn.wa:hover{background:#1fb859}
 code{background:#eef1f6;padding:1px 6px;border-radius:5px;font-size:13px}
 ol.steps li{margin-bottom:6px}
 /* responsive */
@@ -208,7 +216,7 @@ function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==nul
 let db=load(KEY,[]);
 let cfg=Object.assign({url:'',lastSync:0,extra:[],hidden:[]},load(CFG,{}));
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));localStorage.setItem(CFG,JSON.stringify(cfg));}catch(e){toast('সংরক্ষণে সমস্যা হয়েছে')}}
-const live=()=>db.filter(e=>!e.deleted);
+const live=()=>db.filter(e=>!e.deleted&&e.type!=='shop');
 const inPrefix=p=>live().filter(e=>e.date.startsWith(p));
 const sum=(list,t)=>list.reduce((a,e)=>a+(e.type===t?+e.amount||0:0),0);
 function byCat(list,t){const m={};list.forEach(e=>{if(e.type!==t)return;const c=e.category||'অন্যান্য';m[c]=(m[c]||0)+(+e.amount||0)});return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
@@ -251,7 +259,7 @@ function sugg(type){
 
 /* ================= নেভিগেশন ================= */
 const VIEWS=[
-  ['dash','📊','ড্যাশবোর্ড'],['entry','✍️','নতুন এন্ট্রি'],['daily','📅','দৈনিক হিসাব'],
+  ['dash','📊','ড্যাশবোর্ড'],['entry','✍️','নতুন এন্ট্রি'],['shop','🛒','বাজারের তালিকা'],['daily','📅','দৈনিক হিসাব'],
   ['monthly','🗓️','মাসিক হিসাব'],['yearly','📈','বার্ষিক হিসাব'],['compare','⚖️','তুলনা'],
   ['items','🏷️','খাত ও আইটেম'],['settings','⚙️','সিঙ্ক ও সেটিংস']
 ];
@@ -265,7 +273,7 @@ function render(){
   CH={};chN=0;renderNav();
   document.getElementById('title').textContent=VIEWS.find(v=>v[0]===st.view)[2];
   const v=document.getElementById('view');
-  v.innerHTML=({dash:vDash,entry:vEntry,daily:vDaily,monthly:vMonthly,yearly:vYearly,compare:vCompare,items:vItems,settings:vSettings})[st.view]();
+  v.innerHTML=({dash:vDash,entry:vEntry,shop:vShop,daily:vDaily,monthly:vMonthly,yearly:vYearly,compare:vCompare,items:vItems,settings:vSettings})[st.view]();
   if(st.view==='entry')entryInit();
   document.getElementById('backBtn').classList.toggle('show',st.view!=='dash');
   document.querySelector('.fab').style.visibility=st.view==='entry'?'hidden':'';
@@ -551,6 +559,130 @@ function vCompare(){
   return `<div class="seg" style="margin-bottom:14px">${[['month','মাস বনাম মাস'],['year','বছর বনাম বছর'],['all','সব বছর']].map(([k,t])=>`<button class="${md===k?'on n':''}" onclick="go('compare',{cmpMode:'${k}'})">${t}</button>`).join('')}</div>`+body;
 }
 
+/* ================= বাজারের তালিকা (কেনাকাটা) ================= */
+const shopLive=m=>db.filter(e=>!e.deleted&&e.type==='shop'&&(!m||e.date.slice(0,7)===m));
+const isBought=e=>!!(e.extra&&e.extra.bought);
+const paidOf=e=>isBought(e)?(+(e.extra.paid)||+e.amount||0):0;
+const shopName=e=>e.category||'যেকোনো দোকান';
+function groupShop(L){const g={};L.forEach(e=>{(g[shopName(e)]=g[shopName(e)]||[]).push(e)});return g;}
+function shopItemSugg(){const s=new Set();sugg('expense');Object.keys(sugg('expense').items).forEach(k=>s.add(k));db.forEach(e=>{if(e.type==='shop'&&!e.deleted&&e.item)s.add(e.item)});return [...s];}
+function shopShops(){const s=new Set();db.forEach(e=>{if(e.type==='shop'&&!e.deleted&&e.category)s.add(e.category)});return [...s];}
+function vShop(){
+  const m=st.shopMonth||(st.shopMonth=today().slice(0,7)),pm=addMonth(m,-1);
+  const L=shopLive(m).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)),P=shopLive(pm);
+  const G=groupShop(L),est=L.reduce((a,e)=>a+(+e.amount||0),0),done=L.filter(isBought),paid=done.reduce((a,e)=>a+paidOf(e),0);
+  const left=L.filter(e=>!isBought(e)).reduce((a,e)=>a+(+e.amount||0),0);
+  const shopCards=Object.keys(G).map(sh=>{const items=G[sh],rem=items.filter(e=>!isBought(e)).length;
+    return `<div class="card mt"><h3><span>🏪 ${esc(sh)} <small>${bn(items.length)}টি · বাকি ${bn(rem)}টি</small></span>
+      <button class="btn wa" onclick="waShop(this.dataset.s)" data-s="${esc(sh)}">WhatsApp-এ পাঠান</button></h3>
+      ${items.map(e=>`<div class="row ${isBought(e)?'done':''}"><button class="ck ${isBought(e)?'on':''}" onclick="toggleBought('${e.id}')" aria-label="কেনা হয়েছে">${isBought(e)?'✓':''}</button>
+        <div class="t" onclick="editShop('${e.id}')" style="cursor:pointer"><b>${esc(e.item)}</b><small>${e.note?esc(e.note):'পরিমাণ লেখা নেই'}${isBought(e)?' · কেনা হয়েছে':''}</small></div>
+        <div class="a">${isBought(e)?`<span class="inc">${tk(paidOf(e))}</span>`:(+e.amount?'~'+tk(e.amount):'')}</div>
+        <button class="ib" title="মুছুন" onclick="delShop('${e.id}')">🗑️</button></div>`).join('')}</div>`;}).join('');
+  return `<div class="toolbar"><button class="btn" onclick="go('shop',{shopMonth:addMonth(st.shopMonth,-1)})">◀</button>
+    <input type="month" value="${m}" onchange="go('shop',{shopMonth:this.value})"><button class="btn" onclick="go('shop',{shopMonth:addMonth(st.shopMonth,1)})">▶</button>
+    <span class="sp"></span>${L.length?`<button class="btn wa" onclick="waShop('')">📤 পুরো তালিকা WhatsApp-এ</button>`:''}</div>
+  <div class="grid g4">
+    <div class="card stat"><div class="lbl">${fmtMonth(m)} — জিনিস</div><div class="val">${bn(L.length)}টি</div><div class="sub">কেনা হয়েছে ${bn(done.length)}টি</div></div>
+    <div class="card stat b"><div class="lbl">আনুমানিক মোট খরচ</div><div class="val bal">${tk(est)}</div><div class="sub">${cmpTxt(est,P.reduce((a,e)=>a+(+e.amount||0),0),'গত মাসের তালিকা')}</div></div>
+    <div class="card stat e"><div class="lbl">কেনা হয়েছে (আসল দাম)</div><div class="val exp">${tk(paid)}</div></div>
+    <div class="card stat"><div class="lbl">বাকি জিনিসের আনুমানিক দাম</div><div class="val">${tk(left)}</div></div>
+  </div>
+  <div class="card mt"><h3>তালিকায় জিনিস যোগ করুন</h3>
+    <div class="sform">
+      <input id="sItem" list="dlSI" autocomplete="off" placeholder="জিনিস (যেমন: চাল)">
+      <input id="sQty" autocomplete="off" placeholder="পরিমাণ (যেমন: ৫ কেজি)">
+      <input id="sPrice" type="number" inputmode="decimal" min="0" step="any" placeholder="আনুমানিক দাম ₹">
+      <input id="sShop" list="dlSS" autocomplete="off" placeholder="দোকান (ঐচ্ছিক)" value="${esc(st.lastShop||'')}">
+      <button class="btn p" onclick="addShop()">＋ যোগ</button>
+    </div>
+    <datalist id="dlSI">${shopItemSugg().map(k=>`<option value="${esc(k)}">`).join('')}</datalist>
+    <datalist id="dlSS">${shopShops().map(k=>`<option value="${esc(k)}">`).join('')}</datalist>
+    ${!L.length&&P.length?`<div class="banner mt" style="margin-bottom:0"><span>গত মাসে (${fmtMonth(pm)}) ${bn(P.length)}টি জিনিসের তালিকা ছিল।</span><button class="btn p" onclick="copyPrevShop()">গত মাসের তালিকা কপি করুন</button></div>`:''}
+    <div class="hint mt">টিক দিলে "কেনা হয়েছে" হবে, আর চাইলে সেটা নিজে থেকেই খরচের হিসাবে যোগ হয়ে যাবে। জিনিসের নামে চাপলে পরিমাণ বা দাম বদলানো যায়।</div>
+  </div>
+  ${shopCards||'<div class="card mt"><div class="empty">এই মাসের তালিকা খালি — উপরে জিনিস যোগ করুন</div></div>'}
+  <div class="card mt"><h3>গত মাসের সঙ্গে তুলনা <small>${fmtMonth(m)} বনাম ${fmtMonth(pm)}</small></h3>${shopCompare(L,P)}</div>`;
+}
+function shopCompare(L,P){
+  const key=s=>String(s||'').trim().toLowerCase();const map={};
+  L.forEach(e=>{const k=key(e.item);(map[k]=map[k]||{n:e.item,a:null,b:null}).a=e;});
+  P.forEach(e=>{const k=key(e.item);(map[k]=map[k]||{n:e.item,a:null,b:null}).b=e;});
+  const rows=Object.values(map);if(!rows.length)return '<div class="empty">তুলনার মতো তালিকা নেই</div>';
+  const val=e=>e?(isBought(e)?paidOf(e):+e.amount||0):0;
+  const neu=rows.filter(r=>r.a&&!r.b).map(r=>r.n),gone=rows.filter(r=>!r.a&&r.b).map(r=>r.n);
+  const tA=rows.reduce((s,r)=>s+val(r.a),0),tB=rows.reduce((s,r)=>s+val(r.b),0);
+  const df=(a,b)=>{const d=a-b;return (!a||!b||d===0)?'–':`<span class="${d>0?'up':'down'}">${d>0?'+':''}${tk(d)}</span>`};
+  return `<div class="tw"><table><thead><tr><th>জিনিস</th><th>এই মাস</th><th>গত মাস</th><th>দামের পার্থক্য</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${esc(r.n)}</td><td>${r.a?`${esc(r.a.note||'')} <b>${val(r.a)?tk(val(r.a)):''}</b>`:'<span class="hint">নেই</span>'}</td><td>${r.b?`${esc(r.b.note||'')} ${val(r.b)?tk(val(r.b)):''}`:'<span class="hint">নেই</span>'}</td><td>${df(val(r.a),val(r.b))}</td></tr>`).join('')}</tbody>
+  <tfoot><tr><td>মোট</td><td>${tk(tA)}</td><td>${tk(tB)}</td><td>${df(tA,tB)}</td></tr></tfoot></table></div>
+  ${neu.length?`<div class="hint mt">🆕 এ মাসে নতুন: ${neu.map(esc).join(', ')}</div>`:''}${gone.length?`<div class="hint">➖ গত মাসে ছিল, এবার নেই: ${gone.map(esc).join(', ')}</div>`:''}
+  <div class="hint">কেনা জিনিসের ক্ষেত্রে আসল দাম, না কেনা হলে আনুমানিক দাম ধরা হয়েছে।</div>`;
+}
+function addShop(){
+  const it=sItem.value.trim();if(!it){toast('জিনিসের নাম লিখুন');sItem.focus();return;}
+  const shop=sShop.value.trim();st.lastShop=shop;
+  db.push({id:uid(),type:'shop',date:st.shopMonth+'-01',category:shop,item:it,amount:Math.round((parseFloat(sPrice.value)||0)*100)/100,note:sQty.value.trim(),extra:{bought:false},createdAt:Date.now(),updatedAt:Date.now(),deleted:false,dirty:1});
+  persist();render();toast('তালিকায় যোগ হয়েছে');sItem.focus();sync();
+}
+function copyPrevShop(){
+  const P=shopLive(addMonth(st.shopMonth,-1));let t=Date.now();
+  P.forEach(e=>db.push({id:uid()+(t%1000),type:'shop',date:st.shopMonth+'-01',category:e.category,item:e.item,amount:e.amount,note:e.note,extra:{bought:false},createdAt:t++,updatedAt:Date.now(),deleted:false,dirty:1}));
+  persist();render();toast(bn(P.length)+'টি জিনিস কপি হয়েছে');sync();
+}
+function touch(e){e.updatedAt=Date.now();e.dirty=1;}
+function delShop(id){const e=db.find(x=>x.id===id);if(!e||!confirm(`"${e.item}" তালিকা থেকে মুছবেন?`))return;e.deleted=true;touch(e);persist();render();sync();}
+function editShop(id){const e=db.find(x=>x.id===id);if(!e)return;
+  openModal(`<h2>${esc(e.item)}<button class="ib" onclick="closeModal()">✕</button></h2><div class="form mt">
+  <label>জিনিস<input id="eI" value="${esc(e.item)}"></label><label>পরিমাণ<input id="eQ" value="${esc(e.note)}"></label>
+  <label>আনুমানিক দাম ₹<input id="eP" type="number" inputmode="decimal" value="${e.amount||''}"></label><label>দোকান<input id="eS" list="dlSS" value="${esc(e.category)}"></label>
+  <button class="btn p big" onclick="saveShopEdit('${id}')">সংরক্ষণ</button></div>`);}
+function saveShopEdit(id){const e=db.find(x=>x.id===id);e.item=eI.value.trim()||e.item;e.note=eQ.value.trim();e.amount=parseFloat(eP.value)||0;e.category=eS.value.trim();touch(e);persist();closeModal();render();sync();}
+function toggleBought(id){
+  const e=db.find(x=>x.id===id);if(!e)return;e.extra=e.extra||{};
+  if(isBought(e)){
+    const ex=e.extra.expId&&db.find(x=>x.id===e.extra.expId&&!x.deleted);
+    if(ex&&confirm('খরচের হিসাব থেকেও এটা মুছে দেবেন?')){ex.deleted=true;touch(ex);}
+    e.extra={bought:false};touch(e);persist();render();sync();return;}
+  openModal(`<h2>✓ ${esc(e.item)} কেনা হয়েছে<button class="ib" onclick="closeModal()">✕</button></h2><div class="form mt">
+    <label>আসলে কত টাকা লাগল? ₹<input id="bP" type="number" inputmode="decimal" value="${e.amount||''}"></label>
+    <label style="display:flex;gap:10px;align-items:center;color:var(--ink)"><input type="checkbox" id="bAdd" checked style="width:22px;height:22px;margin:0">খরচের হিসাবে যোগ করুন</label>
+    <label>খরচের তারিখ</label>${dateBox('bD',today())}
+    <button class="btn p big mt" onclick="confirmBought('${id}')">ঠিক আছে</button></div>`);
+  setTimeout(()=>bP.focus(),50);
+}
+function confirmBought(id){
+  const e=db.find(x=>x.id===id);const paid=parseFloat(bP.value)||0;e.extra={bought:true,paid};
+  if(bAdd.checked){if(!(paid>0)){toast('টাকার পরিমাণ লিখুন');return;}
+    const S=sugg('expense');const cat=(S.items[e.item]||{}).cat||'বাজার';const eid=uid();
+    db.push({id:eid,type:'expense',date:dval('bD')||today(),category:cat,item:e.item,amount:paid,note:(e.note?e.note+' · ':'')+(e.category?e.category:'বাজারের তালিকা'),createdAt:Date.now(),updatedAt:Date.now(),deleted:false,dirty:1});
+    e.extra.expId=eid;}
+  touch(e);persist();closeModal();render();toast(bAdd.checked?'কেনা হয়েছে · খরচে যোগ হলো ✓':'কেনা হয়েছে ✓');sync();
+}
+function shopText(m,shop){
+  const L=shopLive(m).filter(e=>!isBought(e)&&(shop===''||shopName(e)===shop)).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  if(!L.length)return '';const G=groupShop(L);
+  let t=`🛒 *বাজারের তালিকা — ${fmtMonth(m)}*\n`;
+  Object.keys(G).forEach(sh=>{if(!shop)t+=`\n*🏪 ${sh}*\n`;else t+=`*🏪 ${sh}*\n`;G[sh].forEach((e,i)=>t+=`${bn(i+1)}. ${e.item}${e.note?' — '+e.note:''}\n`);});
+  return t+`\nমোট ${bn(L.length)}টি জিনিস`;
+}
+function waShop(shop){
+  const txt=shopText(st.shopMonth,shop);if(!txt){toast('পাঠানোর মতো বাকি জিনিস নেই');return;}
+  const ph=(cfg.shopPhones||{})[shop]||'';
+  openModal(`<h2>WhatsApp-এ পাঠান<button class="ib" onclick="closeModal()">✕</button></h2>
+  <pre style="white-space:pre-wrap;background:#f4f6f9;border-radius:10px;padding:12px;font-family:inherit;font-size:14.5px;max-height:40vh;overflow:auto">${esc(txt)}</pre>
+  ${shop?`<label class="hint">দোকানের WhatsApp নম্বর (ঐচ্ছিক, মনে রাখা হবে)</label><input id="waPh" type="tel" inputmode="tel" style="width:100%;margin:6px 0 10px" placeholder="যেমন: 9876543210" value="${esc(ph)}">`:''}
+  <div class="toolbar"><button class="btn wa big" onclick="sendWA(this.dataset.s)" data-s="${esc(shop)}">WhatsApp খুলুন</button></div>
+  <div class="hint">নম্বর না দিলে WhatsApp খুলে কাকে পাঠাবেন বেছে নিতে পারবেন।</div>`);
+}
+function sendWA(shop){
+  const txt=shopText(st.shopMonth,shop);let ph='';
+  const el=document.getElementById('waPh');
+  if(el){ph=el.value.replace(/\D/g,'');if(ph.length===10)ph='91'+ph;cfg.shopPhones=cfg.shopPhones||{};cfg.shopPhones[shop]=el.value.trim();persist();}
+  const url='https://wa.me/'+ph+'?text='+encodeURIComponent(txt);
+  const w=window.open(url,'_blank');if(!w)location.href=url;closeModal();
+}
+
 /* ================= খাত ও আইটেম ================= */
 function vItems(){
   const blk=t=>{const S=sugg(t);const L=live().filter(e=>e.type===t);
@@ -593,12 +725,12 @@ async function sync(manual){
   if(!hasSync()||syncing){syncBadge();return;}
   if(!navigator.onLine){syncBadge();if(manual)toast('ইন্টারনেট নেই — অনলাইনে এলে নিজে থেকে সিঙ্ক হবে');return;}
   syncing=true;syncBadge();
-  const pending=db.filter(e=>e.dirty).map(e=>({id:e.id,date:e.date,type:e.type,category:e.category,item:e.item,amount:e.amount,note:e.note,updatedAt:e.updatedAt,deleted:!!e.deleted,createdAt:e.createdAt||''}));
+  const pending=db.filter(e=>e.dirty).map(e=>({id:e.id,date:e.date,type:e.type,category:e.category,item:e.item,amount:e.amount,note:e.note,updatedAt:e.updatedAt,deleted:!!e.deleted,createdAt:e.createdAt||'',extra:e.extra?JSON.stringify(e.extra):''}));
   try{
     const j=await callServer(pending);if(!j||!j.ok)throw new Error(j.error||'সার্ভার ত্রুটি');
     const map=new Map(db.map(e=>[e.id,e]));
     pending.forEach(p=>{const m=map.get(p.id);if(m&&m.updatedAt===p.updatedAt)delete m.dirty;});
-    (j.rows||[]).forEach(s=>{s.amount=+s.amount||0;s.updatedAt=+s.updatedAt||0;s.createdAt=+s.createdAt||0;s.deleted=s.deleted===true||s.deleted==='TRUE'||s.deleted==='true';s.date=String(s.date).slice(0,10);
+    (j.rows||[]).forEach(s=>{s.amount=+s.amount||0;s.updatedAt=+s.updatedAt||0;s.createdAt=+s.createdAt||0;if(typeof s.extra==='string'){try{s.extra=s.extra?JSON.parse(s.extra):null}catch(_){s.extra=null}}s.deleted=s.deleted===true||s.deleted==='TRUE'||s.deleted==='true';s.date=String(s.date).slice(0,10);
       const l=map.get(s.id);if(!l||(!l.dirty&&s.updatedAt>=l.updatedAt)||s.updatedAt>l.updatedAt)map.set(s.id,s);});
     db=[...map.values()];cfg.lastSync=Date.now();lastErr='';persist();
     syncing=false;
