@@ -17,36 +17,39 @@
 <style>
 :root{
   --bg:#f4f6f9;--card:#fff;--ink:#1c2430;--mut:#6b7686;--line:#e3e7ee;
-  --side:#1f3b5c;--side2:#2a4b72;--acc:#2f6fdd;
-  --exp:#d64545;--inc:#1f9d63;--bal:#2f6fdd;--warn:#d98a1c;
+  --side:#e1effb;--on:#c7e0f6;--sink:#2b3a4f;--deep:#1d4f80;--acc:#2f7fd0;--top:#fff;
+  --exp:#d64545;--inc:#1f9d63;--bal:var(--acc);--warn:#d98a1c;
   --r:12px;--sh:0 1px 3px rgba(16,30,54,.08),0 4px 14px rgba(16,30,54,.05);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{font-family:"Hind Siliguri","Noto Sans Bengali","Nirmala UI","Vrinda",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{transition:background .3s;font-family:"Hind Siliguri","Noto Sans Bengali","Nirmala UI","Vrinda",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button,input,select{font:inherit;color:inherit}
 .app{display:flex;min-height:100vh}
 /* sidebar */
-aside{width:236px;background:var(--side);color:#dfe8f5;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;z-index:30}
+aside{width:236px;background:var(--side);color:var(--sink);border-right:1px solid rgba(0,0,0,.05);transition:background .3s;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;z-index:30}
 .banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7e8;border:1px solid #f3d9a6;color:#7a4b06;border-radius:var(--r);padding:12px 16px;margin-bottom:14px;font-size:14px}
 .banner span{flex:1;min-width:180px}
 #installBtn{display:none}
 .backbtn{display:none;border:0;background:#eef1f6;border-radius:9px;font-size:20px;font-weight:700;width:38px;height:38px;cursor:pointer;flex-shrink:0;line-height:1}
 .backbtn.show{display:block}
 .backbtn:hover{background:#e2e7ef}
-.brand{padding:max(20px,env(safe-area-inset-top)) 18px 14px;font-size:19px;font-weight:700;color:#fff;display:flex;gap:10px;align-items:center}
-.brand .logo{width:34px;height:34px;border-radius:10px;background:#ffffff1f;display:grid;place-items:center;font-size:18px}
+.brand{padding:max(20px,env(safe-area-inset-top)) 18px 14px;font-size:19px;font-weight:700;color:var(--deep);display:flex;gap:10px;align-items:center}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:var(--on);display:grid;place-items:center;font-size:18px}
 nav{padding:6px 10px;flex:1;overflow:auto}
-nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:#d6e1f0;padding:11px 12px;border-radius:9px;cursor:pointer;text-align:left;font-size:16px;font-weight:500;margin-bottom:2px}
-nav button:hover{background:#ffffff12}
-nav button.on{background:var(--side2);color:#fff;font-weight:600}
+nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--sink);padding:11px 12px;border-radius:9px;cursor:pointer;text-align:left;font-size:16px;font-weight:500;margin-bottom:2px}
+nav button:hover{background:rgba(255,255,255,.55)}
+nav button.on{background:var(--on);color:var(--deep);font-weight:700}
 nav .ic{width:22px;text-align:center;font-size:17px}
-.sidefoot{padding:14px 16px;font-size:12.5px;color:#a9bbd3;border-top:1px solid #ffffff1a}
-.sidefoot b{color:#fff}
+.sidefoot{padding:14px 16px;font-size:13px;color:var(--sink);opacity:.85;border-top:1px solid rgba(0,0,0,.07)}
+.sidefoot b{color:var(--deep)}
+.swatch{display:flex;flex-wrap:wrap;gap:8px}
+.swatch button{border:2px solid transparent;border-radius:12px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:14px}
+.swatch button.on{border-color:var(--ink)}
 .overlay{display:none}
 /* main */
 main{flex:1;min-width:0;display:flex;flex-direction:column}
-.top{display:flex;align-items:center;gap:10px;padding:max(12px,env(safe-area-inset-top)) 20px 12px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top{display:flex;align-items:center;gap:10px;padding:max(12px,env(safe-area-inset-top)) 20px 12px;background:var(--top);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;transition:background .3s}
 .top h1{font-size:20px;font-weight:600;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .menu{display:none;border:0;background:none;font-size:22px;cursor:pointer;padding:4px 8px}
 .badge{font-size:13px;font-weight:500;padding:5px 10px;border-radius:20px;background:#eef2f7;color:var(--mut);white-space:nowrap;cursor:pointer;border:0}
@@ -138,7 +141,7 @@ tfoot td{font-weight:700;background:#f8fafc}
 .fab{display:none}
 .histbox{background:#f3f6fc;border:1px solid #dbe4f3;border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.6;margin:-2px 0 14px;color:#33405a}
 .histbox a{color:var(--acc);font-weight:600;text-decoration:none;white-space:nowrap}
-.ticker{display:flex;align-items:stretch;background:#1f3b5c;color:#fff;border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh);cursor:pointer}
+.ticker{display:flex;align-items:stretch;background:var(--deep);color:#fff;border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh);cursor:pointer}
 .ticker .tl{flex-shrink:0;background:var(--exp);padding:11px 14px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .ticker .tkw{flex:1;overflow:hidden;display:flex;align-items:center;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
 .ticker .tt{display:inline-flex;white-space:nowrap;animation:tick 40s linear infinite;will-change:transform}
@@ -166,7 +169,7 @@ ol.steps li{margin-bottom:6px}
   .overlay.show{display:block;position:fixed;inset:0;background:#0006;z-index:25}
   .menu{display:block}
   .addbtn{display:none}
-  .fab{display:grid;place-items:center;position:fixed;right:18px;bottom:20px;width:56px;height:56px;border-radius:50%;background:var(--acc);color:#fff;font-size:28px;border:0;box-shadow:0 6px 18px #2f6fdd66;z-index:40;cursor:pointer}
+  .fab{display:grid;place-items:center;position:fixed;right:18px;bottom:20px;width:56px;height:56px;border-radius:50%;background:var(--acc);color:#fff;font-size:28px;border:0;box-shadow:0 6px 18px rgba(0,0,0,.22);z-index:40;cursor:pointer}
   #view{padding:14px 12px 90px}
   .g2{grid-template-columns:minmax(0,1fr)}
   .stat .val{font-size:20px}
@@ -807,7 +810,7 @@ function syncBadge(){
   else if(lastErr){cls='err';txt='⚠️ সিঙ্ক ব্যর্থ';}
   else{cls=p?'off':'ok';txt=p?`⏳ ${bn(p)}টি বাকি`:'✅ সিঙ্ক হয়েছে';}
   b.className='badge '+cls;b.textContent=txt;
-  document.getElementById('sidefoot').innerHTML=`মোট এন্ট্রি: <b>${bn(live().length)}</b><br>${cfg.lastSync?'শেষ সিঙ্ক: '+bn(new Date(cfg.lastSync).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})):'এখনো সিঙ্ক হয়নি'}`;
+  document.getElementById('sidefoot').innerHTML=`আজকের রঙ: <b>${THEMES[themeIdx()].n}</b><br>মোট এন্ট্রি: <b>${bn(live().length)}</b><br>${cfg.lastSync?'শেষ সিঙ্ক: '+bn(new Date(cfg.lastSync).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})):'এখনো সিঙ্ক হয়নি'}`;
 }
 async function sync(manual){
   if(!hasSync()||syncing){syncBadge();return;}
@@ -830,6 +833,23 @@ window.addEventListener('online',()=>{toast('অনলাইন — সিঙ্
 window.addEventListener('offline',syncBadge);
 setInterval(()=>sync(),60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync();});
+
+/* ================= রঙ (থিম) — প্রতিদিন বদলায় ================= */
+const THEMES=[
+ {n:'সূর্যমুখী',bg:'#fffaf0',side:'#fff0d2',on:'#ffdf9e',sink:'#4a3a1e',deep:'#8a4b0f',acc:'#d9822b',top:'#fffdf7'},
+ {n:'আকাশি',bg:'#f2f8fd',side:'#e1effb',on:'#c7e0f6',sink:'#2b3a4f',deep:'#1d4f80',acc:'#2f7fd0',top:'#fbfdff'},
+ {n:'গোলাপি',bg:'#fdf4f6',side:'#fbe3ea',on:'#f6c9d6',sink:'#4d2a35',deep:'#7d2541',acc:'#d14d72',top:'#fffbfc'},
+ {n:'পুদিনা',bg:'#f1faf6',side:'#dcf3e8',on:'#bfe8d3',sink:'#22423a',deep:'#145c40',acc:'#1f9d6b',top:'#fbfefc'},
+ {n:'ল্যাভেন্ডার',bg:'#f6f4fd',side:'#e9e4fa',on:'#d6ccf5',sink:'#35305a',deep:'#3d2d82',acc:'#6b55c9',top:'#fcfbff'},
+ {n:'পিচ',bg:'#fff6f1',side:'#ffe6d9',on:'#ffd0b8',sink:'#4e3125',deep:'#8a3418',acc:'#e0663a',top:'#fffcfa'},
+ {n:'সমুদ্র',bg:'#f0f9fa',side:'#d9f1f3',on:'#b9e4e8',sink:'#1f4448',deep:'#0d5961',acc:'#168f9c',top:'#fbfefe'}
+];
+function themeIdx(){return (cfg.theme==null||cfg.theme==='auto')?new Date().getDay():+cfg.theme;}
+function applyTheme(){const t=THEMES[themeIdx()]||THEMES[1];const r=document.documentElement.style;
+  ['bg','side','on','sink','deep','acc','top'].forEach(k=>r.setProperty('--'+k,t[k]));
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t.side;}
+function setTheme(v){cfg.theme=v;persist();applyTheme();render();}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)applyTheme();});
 
 /* ================= সেটিংস ================= */
 function vSettings(){
@@ -855,6 +875,11 @@ function vSettings(){
       <li>যে URL পাবেন (…/exec) সেটা উপরের বক্সে বসিয়ে “সংরক্ষণ ও সিঙ্ক” চাপুন।</li>
       <li>অন্য ফোন/ল্যাপটপেও এই ফাইল খুলে একই URL দিলে সব ডিভাইসে একই হিসাব থাকবে।</li></ol>
   </div>`}
+  <div class="card"><h3>অ্যাপের রঙ <small>আজ: ${THEMES[themeIdx()].n}</small></h3>
+    <div class="swatch"><button class="${cfg.theme==null||cfg.theme==='auto'?'on':''}" style="background:linear-gradient(90deg,${THEMES.map(t=>t.on).join(',')})" onclick="setTheme('auto')">🔄 প্রতিদিন বদলাবে</button>
+    ${THEMES.map((t,i)=>`<button class="${String(cfg.theme)===String(i)?'on':''}" style="background:${t.on};color:${t.deep}" onclick="setTheme(${i})">${t.n}</button>`).join('')}</div>
+    <div class="hint mt">"প্রতিদিন বদলাবে" বাছলে সপ্তাহের সাত দিন সাতটা হালকা রঙ: রবি সূর্যমুখী, সোম আকাশি, মঙ্গল গোলাপি, বুধ পুদিনা, বৃহস্পতি ল্যাভেন্ডার, শুক্র পিচ, শনি সমুদ্র।</div>
+  </div>
   <div class="card"><h3>ব্যাকআপ ও ডেটা</h3>
     <div class="toolbar"><button class="btn" onclick="exportJSON()">⬇️ ব্যাকআপ (JSON)</button><button class="btn" onclick="exportCSV()">⬇️ Excel-এর জন্য CSV</button>
     <label class="btn" style="margin:0">⬆️ ব্যাকআপ ফেরত আনুন<input type="file" accept=".json" style="display:none" onchange="importJSON(this.files[0])"></label></div>
@@ -899,6 +924,7 @@ window.addEventListener('popstate',()=>{
 });
 
 /* ================= শুরু ================= */
+applyTheme();
 render();
 sync();
 </script>
