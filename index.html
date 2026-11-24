@@ -136,6 +136,18 @@ tfoot td{font-weight:700;background:#f8fafc}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:#1c2430;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:.25s;z-index:200;pointer-events:none;font-size:14px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .fab{display:none}
+.histbox{background:#f3f6fc;border:1px solid #dbe4f3;border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.6;margin:-2px 0 14px;color:#33405a}
+.histbox a{color:var(--acc);font-weight:600;text-decoration:none;white-space:nowrap}
+.ticker{display:flex;align-items:stretch;background:#1f3b5c;color:#fff;border-radius:var(--r);overflow:hidden;margin-bottom:14px;box-shadow:var(--sh);cursor:pointer}
+.ticker .tl{flex-shrink:0;background:var(--exp);padding:11px 14px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.ticker .tkw{flex:1;overflow:hidden;display:flex;align-items:center;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.ticker .tt{display:inline-flex;white-space:nowrap;animation:tick 40s linear infinite;will-change:transform}
+.ticker .tt span{padding:0 26px;font-size:15.5px}
+.ticker .tt span::before{content:"◆";color:#ffb347;margin-right:12px;font-size:11px;vertical-align:2px}
+.ticker .tt b{color:#ffd27a;font-weight:700}
+.ticker .tt .u{color:#ff9b9b}.ticker .tt .d{color:#8ee3b4}
+.ticker.pause .tt{animation-play-state:paused}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .sform{display:grid;grid-template-columns:2fr 1.3fr 1.2fr 1.5fr auto;gap:8px}
 .sform input{font-size:16px}
 @media(max-width:820px){.sform{grid-template-columns:1fr 1fr}.sform button{grid-column:1/-1;padding:11px}}
@@ -275,6 +287,7 @@ function render(){
   const v=document.getElementById('view');
   v.innerHTML=({dash:vDash,entry:vEntry,shop:vShop,daily:vDaily,monthly:vMonthly,yearly:vYearly,compare:vCompare,items:vItems,settings:vSettings})[st.view]();
   if(st.view==='entry')entryInit();
+  if(st.view==='dash')tickerInit();
   document.getElementById('backBtn').classList.toggle('show',st.view!=='dash');
   document.querySelector('.fab').style.visibility=st.view==='entry'?'hidden':'';
   syncBadge();
@@ -314,14 +327,14 @@ function lines(labels,series,{h=240}={}){
   return `<svg class="chart" viewBox="0 0 ${W} ${h}">${g}</svg>`+legend(series);
 }
 const legend=s=>s.length>1?`<div class="legend">${s.map(x=>`<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}</div>`:'';
-function hbars(list,color,total){if(!list.length)return '<div class="empty">কোনো তথ্য নেই</div>';const mx=list[0][1]||1;total=total||list.reduce((a,b)=>a+b[1],0);
-  return list.map(([k,v])=>`<div class="hb"><div class="l"><span>${esc(k)}</span><span><b>${tk(v)}</b> <small class="hint">${bn(Math.round(v/total*100))}%</small></span></div><div class="tr"><div class="f" style="width:${v/mx*100}%;background:${color}"></div></div></div>`).join('');}
+function hbars(list,color,total,type){if(!list.length)return '<div class="empty">কোনো তথ্য নেই</div>';const mx=list[0][1]||1;total=total||list.reduce((a,b)=>a+b[1],0);
+  return list.map(([k,v])=>`<div class="hb" ${type?`style="cursor:pointer" onclick="showHist(${hkey(type,'category',k)})"`:''}><div class="l"><span>${esc(k)}</span><span><b>${tk(v)}</b> <small class="hint">${bn(Math.round(v/total*100))}%</small></span></div><div class="tr"><div class="f" style="width:${v/mx*100}%;background:${color}"></div></div></div>`).join('');}
 const YCOL=['#2f6fdd','#d64545','#1f9d63','#d98a1c','#8b5cf6','#0ea5b7'];
 
 /* ================= এন্ট্রি তালিকা ================= */
 function rowHtml(e,showDate){
   return `<div class="row"><span class="dot" style="background:${e.type==='expense'?'var(--exp)':'var(--inc)'}"></span>
-  <div class="t"><b>${esc(e.item||e.category)}</b><small>${e.createdAt?'🕒 '+fmtTime(e.createdAt)+' · ':''}${esc(e.category)}${showDate?' · '+bn(e.date.slice(8))+' '+MONS[+e.date.slice(5,7)-1]:''}${e.note?' · '+esc(e.note):''}${e.dirty?' · <span class="pend">সিঙ্ক বাকি</span>':''}</small></div>
+  <div class="t" style="cursor:pointer" onclick="showHist(${hkey(e.type,e.item?'item':'category',e.item||e.category)})"><b>${esc(e.item||e.category)}</b><small>${e.createdAt?'🕒 '+fmtTime(e.createdAt)+' · ':''}${esc(e.category)}${showDate?' · '+bn(e.date.slice(8))+' '+MONS[+e.date.slice(5,7)-1]:''}${e.note?' · '+esc(e.note):''}${e.dirty?' · <span class="pend">সিঙ্ক বাকি</span>':''}</small></div>
   <div class="a ${e.type==='expense'?'exp':'inc'}">${e.type==='expense'?'−':'+'}${tk(e.amount)}</div>
   <button class="ib" title="সম্পাদনা" onclick="closeModal();go('entry',{editId:'${e.id}'})">✏️</button>
   <button class="ib" title="মুছুন" onclick="delEntry('${e.id}')">🗑️</button></div>`;
@@ -360,6 +373,7 @@ function vDash(){
   const ms=[...Array(12)].map((_,i)=>y+'-'+pad(i+1));
   const recent=[...live()].sort((a,b)=>(b.date+b.updatedAt).localeCompare(a.date+a.updatedAt)).slice(0,8);
   return `${hasSync()?'':`<div class="banner"><span>☁️ অনলাইন সিঙ্ক এখনো চালু হয়নি — হিসাব শুধু এই ফোনে আছে। Google Sheet-এর লিংক বসালে সব ডিভাইসে থাকবে ও ব্যাকআপ হবে।</span><button class="btn" onclick="go('settings')">সিঙ্ক চালু করুন</button></div>`}
+  ${tickerHtml(M,pSame,m)}
   <div class="grid g4">
     <div class="card stat e"><div class="lbl">আজকের খরচ</div><div class="val exp">${tk(sum(T,'expense'))}</div><div class="sub">আয়: <b class="inc">${tk(sum(T,'income'))}</b> · ${bn(T.length)}টি এন্ট্রি</div></div>
     <div class="card stat e"><div class="lbl">এই মাসের খরচ (${MON[+m.slice(5)-1]})</div><div class="val exp">${tk(mE)}</div><div class="sub">${cmpTxt(mE,sum(pSame,'expense'),'গত মাসের এই সময়ের তুলনায়')}</div></div>
@@ -371,10 +385,82 @@ function vDash(){
   <div class="grid g2 mt">
     <div class="card"><h3>${bn(y)} সালের মাসওয়ারি <small>মাসে চাপুন → মাসিক হিসাব</small></h3>
       ${bars(MONS,[{name:'খরচ',color:'var(--exp)',values:ms.map(k=>sum(inPrefix(k),'expense'))},{name:'আয়',color:'var(--inc)',values:ms.map(k=>sum(inPrefix(k),'income'))}],{onClick:i=>go('monthly',{month:ms[i]})})}</div>
-    <div class="card"><h3>এই মাসে কোন খাতে কত খরচ</h3>${hbars(byCat(M,'expense').slice(0,7),'var(--exp)')}</div>
+    <div class="card"><h3>এই মাসে কোন খাতে কত খরচ</h3>${hbars(byCat(M,'expense').slice(0,7),'var(--exp)',0,'expense')}</div>
   </div>
   <div class="card mt"><h3>সাম্প্রতিক এন্ট্রি <button class="btn" onclick="go('daily')">সব দেখুন</button></h3>
     ${recent.length?recent.map(e=>rowHtml(e,true)).join(''):`<div class="empty">এখনো কোনো হিসাব লেখা হয়নি।<br><br><button class="btn p" onclick="openEntry()">＋ প্রথম এন্ট্রি লিখুন</button></div>`}</div>`;
+}
+
+/* ============ চলমান খবর (টিকার) ============ */
+function tickerHtml(M,PS,m){
+  const E=sum(M,'expense');if(!E)return '';
+  const cats=byCat(M,'expense'),pc=Object.fromEntries(byCat(PS,'expense'));const out=[];
+  const [c1,v1]=cats[0];
+  out.push(`এই মাসে সবচেয়ে বেশি খরচ: <b>${esc(c1)}</b> — ${tk(v1)} (মোট খরচের ${bn(Math.round(v1/E*100))}%)`);
+  if(cats[1])out.push(`দ্বিতীয় সর্বোচ্চ: <b>${esc(cats[1][0])}</b> — ${tk(cats[1][1])}`);
+  if(cats[2])out.push(`তৃতীয়: <b>${esc(cats[2][0])}</b> — ${tk(cats[2][1])}`);
+  // গত মাসের এই সময়ের তুলনায় সবচেয়ে বেশি বেড়েছে / কমেছে
+  const diffs=cats.map(([c,v])=>[c,v-(pc[c]||0)]).concat(Object.keys(pc).filter(c=>!cats.find(x=>x[0]===c)).map(c=>[c,-pc[c]])).sort((a,b)=>b[1]-a[1]);
+  if(Object.keys(pc).length){
+    if(diffs[0]&&diffs[0][1]>0)out.push(`গত মাসের এই সময়ের চেয়ে <b>${esc(diffs[0][0])}</b>-এ <span class="u">▲ ${tk(diffs[0][1])} বেশি</span> খরচ হয়েছে`);
+    const lo=diffs[diffs.length-1];if(lo&&lo[1]<0)out.push(`<b>${esc(lo[0])}</b>-এ গত মাসের চেয়ে <span class="d">▼ ${tk(-lo[1])} কম</span>`);
+    const pE=sum(PS,'expense');if(pE)out.push(`মোট খরচ গত মাসের এই সময়ের তুলনায় ${E>pE?`<span class="u">▲ ${tk(E-pE)} বেশি</span>`:`<span class="d">▼ ${tk(pE-E)} কম</span>`}`);
+  }
+  const big=M.filter(e=>e.type==='expense').sort((a,b)=>b.amount-a.amount)[0];
+  if(big)out.push(`এ মাসের সবচেয়ে বড় একক খরচ: <b>${esc(big.item||big.category)}</b> ${tk(big.amount)} (${bn(+big.date.slice(8))} ${MONS[+big.date.slice(5,7)-1]})`);
+  const byDay={};M.filter(e=>e.type==='expense').forEach(e=>byDay[e.date]=(byDay[e.date]||0)+(+e.amount||0));
+  const hd=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
+  if(hd)out.push(`সবচেয়ে বেশি খরচের দিন: <b>${bn(+hd[0].slice(8))} ${MON[+hd[0].slice(5,7)-1]}</b> — ${tk(hd[1])}`);
+  const I=sum(M,'income');if(I)out.push(I>=E?`এ পর্যন্ত আয়ের <b>${bn(Math.round(E/I*100))}%</b> খরচ হয়েছে, হাতে আছে ${tk(I-E)}`:`<span class="u">সাবধান: খরচ আয়ের চেয়ে ${tk(E-I)} বেশি</span>`);
+  const items=out.map(t=>`<span>${t}</span>`).join('');
+  return `<div class="ticker" id="ticker" onclick="this.classList.toggle('pause')" title="চাপলে থামবে/চলবে"><div class="tl">📢 ${MON[+m.slice(5)-1]}</div><div class="tkw"><div class="tt" id="tickTrack">${items}${items}</div></div></div>`;
+}
+function tickerInit(){const t=document.getElementById('tickTrack');if(!t)return;const w=t.scrollWidth/2;t.style.animationDuration=Math.max(18,w/55)+'s';}
+
+/* ============ কোনো খরচ/আয়ের পুরো ইতিহাস ============ */
+const HK=[],HKM={};function hkey(t,f,n){const k=t+'|'+f+'|'+n;if(!(k in HKM)){HK.push([t,f,n]);HKM[k]=HK.length-1;}return HKM[k];}
+const nk=s=>String(s||'').trim().toLowerCase();
+function histList(type,field,name){const k=nk(name);return live().filter(e=>e.type===type&&nk(field==='item'?(e.item||e.category):e.category)===k);}
+function histSummary(L){
+  const td=today(),m=td.slice(0,7),pm=addMonth(m,-1),y=td.slice(0,4),py=String(+y-1),lm=addMonth(m,-12);
+  const f=p=>{const x=L.filter(e=>e.date.startsWith(p));return {t:x.reduce((a,e)=>a+(+e.amount||0),0),n:x.length,list:x};};
+  return {m:f(m),pm:f(pm),lm:f(lm),y:f(y),py:f(py),mk:m,pmk:pm,lmk:lm,yk:y,pyk:py};
+}
+const dShort=d=>bn(+d.slice(8))+' '+MONS[+d.slice(5,7)-1];
+function showHist(i){
+  const [type,field,name]=HK[i];const L=histList(type,field,name).sort((a,b)=>(b.date+(b.createdAt||0)).localeCompare(a.date+(a.createdAt||0)));
+  const S=histSummary(L),col=type==='expense'?'var(--exp)':'var(--inc)',cls=type==='expense'?'exp':'inc';
+  const ms=[];for(let k=11;k>=0;k--)ms.push(addMonth(S.mk,-k));
+  const mv=ms.map(k=>L.filter(e=>e.date.startsWith(k)).reduce((a,e)=>a+(+e.amount||0),0));
+  const card=(lbl,o,sub)=>`<div class="card stat" style="box-shadow:none;background:#f6f8fb;padding:10px 12px"><div class="lbl">${lbl}</div><div class="val ${cls}" style="font-size:18px">${tk(o.t)}</div><div class="sub">${bn(o.n)} বার${o.list.length?' · '+o.list.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>dShort(e.date)).slice(0,4).join(', ')+(o.list.length>4?'…':''):''}${sub||''}</div></div>`;
+  const groups={};L.forEach(e=>(groups[e.date.slice(0,7)]=groups[e.date.slice(0,7)]||[]).push(e));
+  const gk=Object.keys(groups).sort().reverse();
+  const last=L[0];
+  const lists=gk.slice(0,24).map(k=>`<div style="display:flex;justify-content:space-between;margin:14px 0 2px;font-weight:600"><span>${fmtMonth(k)}</span><span class="${cls}">${tk(groups[k].reduce((a,e)=>a+(+e.amount||0),0))}</span></div>`+groups[k].map(e=>`<div class="row" style="padding:7px 2px"><div class="t"><b style="font-weight:500">${fmtDate(e.date)}</b><small>${e.createdAt?'🕒 '+fmtTime(e.createdAt):''}${field==='category'&&e.item?' · '+esc(e.item):''}${e.note?' · '+esc(e.note):''}</small></div><div class="a ${cls}">${tk(e.amount)}</div><button class="ib" onclick="closeModal();go('entry',{editId:'${e.id}'})">✏️</button></div>`).join('')).join('');
+  const other=field==='item'&&last&&last.category&&nk(last.category)!==nk(name)?`<button class="btn" onclick="showHist(${hkey(type,'category',last.category)})">পুরো "${esc(last.category)}" খাত দেখুন</button>`:'';
+  openModal(`<h2><span>${type==='expense'?'💸':'💰'} ${esc(name)}</span><button class="ib" onclick="closeModal()">✕</button></h2>
+  <div class="hint">${field==='category'?'খাত':'জিনিস/ব্যক্তি'} · মোট ${bn(L.length)} বার · সব মিলিয়ে ${tk(L.reduce((a,e)=>a+(+e.amount||0),0))}${last?` · শেষবার ${fmtDate(last.date)} — ${tk(last.amount)}`:''}</div>
+  <div class="grid" style="margin-top:12px;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))">
+    ${card('এই মাস ('+MON[+S.mk.slice(5)-1]+')',S.m,S.pm.t?'<br>'+cmpTxt(S.m.t,S.pm.t,'গত মাস',type==='expense'):'')}
+    ${card('গত মাস ('+MON[+S.pmk.slice(5)-1]+')',S.pm)}
+    ${card('এই বছর ('+bn(S.yk)+')',S.y,S.py.t?'<br>'+cmpTxt(S.y.t,S.py.t,'গত বছর',type==='expense'):'')}
+    ${card('গত বছর ('+bn(S.pyk)+')',S.py)}
+  </div>
+  ${S.lm.n?`<div class="hint mt">📅 গত বছরের এই মাসে (${fmtMonth(S.lmk)}): ${tk(S.lm.t)}, ${bn(S.lm.n)} বার</div>`:''}
+  <h4 style="margin:16px 0 4px">শেষ ১২ মাস</h4>${bars(ms.map(k=>MONS[+k.slice(5)-1]),[{name:name,color:col,values:mv}],{h:170})}
+  <h4 style="margin:16px 0 0">কবে কত (তারিখ অনুযায়ী)</h4>${lists||'<div class="empty">কোনো এন্ট্রি নেই</div>'}
+  <div class="toolbar mt">${other}<button class="btn p" onclick="closeModal();st.etype='${type}';go('entry',{editId:null})">＋ নতুন এন্ট্রি</button></div>`);
+}
+/* এন্ট্রি লেখার সময় আগের হিসাব দেখানো */
+function entryHint(){
+  const el=document.getElementById('fHist');if(!el)return;
+  const it=fItem.value.trim(),c=fCat.value.trim();let field,name;
+  if(it&&histList(st.etype,'item',it).length){field='item';name=it;}else if(c&&histList(st.etype,'category',c).length){field='category';name=c;}
+  if(!name){el.innerHTML='';el.style.display='none';return;}
+  const L=histList(st.etype,field,name).sort((a,b)=>(b.date+(b.createdAt||0)).localeCompare(a.date+(a.createdAt||0)));const S=histSummary(L);
+  const ds=o=>o.n?`${tk(o.t)} (${o.list.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>dShort(e.date)).slice(0,3).join(', ')})`:'—';
+  el.style.display='block';
+  el.innerHTML=`📜 <b>${esc(name)}</b> — শেষবার ${dShort(L[0].date)} ${tk(L[0].amount)}<br>এই মাসে: ${ds(S.m)} · গত মাসে: ${ds(S.pm)}<br>এই বছর: ${tk(S.y.t)} · গত বছর: ${tk(S.py.t)} <a href="#" onclick="event.preventDefault();showHist(${hkey(st.etype,field,name)})">সব দেখুন ›</a>`;
 }
 
 /* ================= নতুন এন্ট্রি ================= */
@@ -390,6 +476,7 @@ function vEntry(){
     <label>খাত / ক্যাটাগরি<input id="fCat" list="dlCat" autocomplete="off" placeholder="${t==='expense'?'যেমন: বাজার':'যেমন: বেতন'}" value="${esc(ed?ed.category:'')}"></label>
     <label>বিবরণ / কী কিনলেন<input id="fItem" list="dlItem" autocomplete="off" placeholder="${t==='expense'?'যেমন: আলু, চাল, দুধ':'যেমন: নভেম্বরের বেতন'}" value="${esc(ed?ed.item:'')}"></label>
     <label>টাকার পরিমাণ (₹)<input type="number" id="fAmt" inputmode="decimal" min="0" step="any" placeholder="০" value="${ed?ed.amount:''}"></label>
+    <div id="fHist" class="histbox" style="display:none"></div>
     <label>নোট (ঐচ্ছিক)<input id="fNote" autocomplete="off" value="${esc(ed?ed.note:'')}"></label>
     <div class="hint" style="margin:-4px 0 12px">🕒 সময়: ${ed&&ed.createdAt?fmtTime(ed.createdAt)+' (লেখার সময়)':'সংরক্ষণ করলে এখনকার সময় নিজে থেকে বসে যাবে'}</div>
     <div class="hint" style="margin:-4px 0 6px">বারবার ব্যবহৃত (চাপলেই বসে যাবে):</div>
@@ -410,7 +497,8 @@ function entryInit(){
   fillItems();
   fCat.addEventListener('input',fillItems);
   fItem.addEventListener('change',()=>autoFromItem(false));
-  fItem.addEventListener('input',()=>autoFromItem(false));
+  fItem.addEventListener('input',()=>{autoFromItem(false);entryHint();});
+  fItem.addEventListener('change',entryHint);fCat.addEventListener('input',entryHint);fCat.addEventListener('change',entryHint);setTimeout(entryHint,0);
   [fCat,fItem,fAmt,fNote].forEach(el=>el.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();if(el===fNote||el===fAmt)saveEntry();else (el===fCat?fItem:fAmt).focus();}}));
   entryList();
   if(!st.editId)setTimeout(()=>fCat.value?fItem.focus():null,50);
@@ -426,7 +514,7 @@ function autoFromItem(force){
   if(it.cat&&(force||!fCat.value.trim()))fCat.value=it.cat;
   if(it.last)fAmt.placeholder='গতবার '+it.last;
 }
-function pickItem(k){fItem.value=k;autoFromItem(true);fAmt.focus();}
+function pickItem(k){fItem.value=k;autoFromItem(true);entryHint();fAmt.focus();}
 function entryList(){
   const d=dval('fDate')||st.date;const L=live().filter(e=>e.date===d).sort((a,b)=>b.updatedAt-a.updatedAt);
   eListH.innerHTML=`${fmtDate(d)} <small>খরচ <b class="exp">${tk(sum(L,'expense'))}</b> · আয় <b class="inc">${tk(sum(L,'income'))}</b></small>`;
@@ -482,8 +570,8 @@ function vMonthly(){
   <div class="card mt"><h3>দিন অনুযায়ী খরচ ও আয় <small>বারে চাপুন → সেদিনের বিস্তারিত</small></h3>
     ${bars(days.map((_,i)=>bn(i+1)),[{name:'খরচ',color:'var(--exp)',values:dE},{name:'আয়',color:'var(--inc)',values:dI}],{every:n>20?2:1,onClick:i=>showDay(days[i]),tip:i=>fmtDate(days[i])+' — খরচ '+tk(dE[i])+', আয় '+tk(dI[i])})}</div>
   <div class="grid g2 mt">
-    <div class="card"><h3 class="exp">খাত অনুযায়ী খরচ</h3>${hbars(byCat(M,'expense'),'var(--exp)')}</div>
-    <div class="card"><h3 class="inc">খাত অনুযায়ী আয়</h3>${hbars(byCat(M,'income'),'var(--inc)')}</div>
+    <div class="card"><h3 class="exp">খাত অনুযায়ী খরচ</h3>${hbars(byCat(M,'expense'),'var(--exp)',0,'expense')}</div>
+    <div class="card"><h3 class="inc">খাত অনুযায়ী আয়</h3>${hbars(byCat(M,'income'),'var(--inc)',0,'income')}</div>
   </div>
   <div class="card mt"><h3>তুলনা <small>গত মাস ও গত বছরের একই মাস</small></h3>${catCompare(M,P,LY,fmtMonth(addMonth(m,-1)),fmtMonth(addMonth(m,-12)),'এই মাস')}</div>`;
 }
@@ -520,7 +608,7 @@ function vYearly(){
     ${bars(MONS,[{name:'খরচ',color:'var(--exp)',values:mE},{name:'আয়',color:'var(--inc)',values:mI}],{onClick:i=>go('monthly',{month:ms[i]})})}</div>
   <div class="grid g2 mt">
     <div class="card"><h3>খরচ: ${bn(y)} বনাম ${bn(+y-1)}</h3>${lines(MONS,[{name:bn(y),color:'var(--exp)',values:mE},{name:bn(+y-1),color:'#9aa6b8',values:pE}])}</div>
-    <div class="card"><h3>খাত অনুযায়ী বছরের খরচ</h3>${hbars(byCat(Y,'expense').slice(0,10),'var(--exp)')}</div>
+    <div class="card"><h3>খাত অনুযায়ী বছরের খরচ</h3>${hbars(byCat(Y,'expense').slice(0,10),'var(--exp)',0,'expense')}</div>
   </div>
   <div class="card mt"><h3>মাসওয়ারি হিসাব</h3><div class="tw"><table><thead><tr><th>মাস</th><th>আয়</th><th>খরচ</th><th>সঞ্চয়</th><th>জমা সঞ্চয়</th><th>গত বছর খরচ</th></tr></thead><tbody>
   ${ms.map((k,i)=>{run+=mI[i]-mE[i];return `<tr class="click" onclick="go('monthly',{month:'${k}'})"><td>${MON[i]}</td><td class="inc">${tk(mI[i])}</td><td class="exp">${tk(mE[i])}</td><td class="${mI[i]-mE[i]<0?'exp':'bal'}">${tk(mI[i]-mE[i])}</td><td>${tk(run)}</td><td class="hint">${tk(pE[i])}</td></tr>`}).join('')}</tbody>

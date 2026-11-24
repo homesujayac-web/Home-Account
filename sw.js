@@ -1,6 +1,6 @@
 // বাড়ির হিসাব — অফলাইন সার্ভিস ওয়ার্কার
 // অ্যাপ আপডেট করলে নিচের VERSION নম্বর বাড়িয়ে দিন (v1 → v2), তাহলে ফোনে নতুন সংস্করণ চলে আসবে।
-const VERSION = 'bari-hisab-v6';
+const VERSION = 'bari-hisab-v8';
 const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
