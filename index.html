@@ -78,6 +78,11 @@ input:focus,select:focus{outline:2px solid #2f6fdd55;border-color:var(--acc)}
 /* form */
 .form label{display:block;font-size:13px;color:var(--mut);margin-bottom:12px}
 .form label input{display:block;width:100%;margin-top:5px;font-size:16px;color:var(--ink)}
+.dbox{display:flex;gap:6px;position:relative;margin:5px 0 12px}
+.dbox .dtext{flex:1;font-size:16px;letter-spacing:.5px;font-variant-numeric:tabular-nums;min-width:120px}
+.toolbar .dbox{margin:0;flex:0 1 190px}
+.dcal{border:1px solid #cfd6e1;background:#fff;border-radius:9px;padding:0 12px;cursor:pointer;font-size:17px}
+.dhid{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
 .chip{border:1px solid #d7dde7;background:#f8fafc;border-radius:20px;padding:5px 11px;font-size:13px;cursor:pointer}
 .chip:hover{background:#eaf0fb;border-color:#b9c9e6}
@@ -206,6 +211,18 @@ function cmpTxt(now,prev,label,isExp=true){
   const up=now>prev; const cls=isExp?(up?'up':'down'):(up?'down':'up');
   return `<span class="cmp ${cls}">${pct(now,prev)}</span> <span class="hint">${label} (${tk(prev)})</span>`;
 }
+
+/* ============ তারিখ dd/mm/yyyy ============ */
+const toDMY=s=>s?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):'';
+function parseDMY(t){const m=String(t).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2}|\d{4})$/);if(!m)return '';let y=m[3].length===2?'20'+m[3]:m[3];const dt=new Date(+y,+m[2]-1,+m[1]);if(dt.getDate()!==+m[1]||dt.getMonth()!==+m[2]-1)return '';return ymd(dt);}
+const DCB={};
+function dateBox(id,val,cb){DCB[id]=cb||null;return `<span class="dbox"><input id="${id}" class="dtext" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" value="${toDMY(val)}" data-ymd="${val}" oninput="dmyType(this)" onchange="dmyCommit(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"><button type="button" class="dcal" title="ক্যালেন্ডার" onclick="dmyPick('${id}')">📅</button><input type="date" class="dhid" id="${id}_p" value="${val}" tabindex="-1" onchange="dmyPicked('${id}',this.value)"></span>`;}
+const dval=id=>{const el=document.getElementById(id);return el?el.dataset.ymd:'';};
+function setDval(id,v){const el=document.getElementById(id);if(!el)return;el.dataset.ymd=v;el.value=toDMY(v);const p=document.getElementById(id+'_p');if(p)p.value=v;}
+function dmyType(el){let d=el.value.replace(/\D/g,'').slice(0,8);if(d.length>4)d=d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);else if(d.length>2)d=d.slice(0,2)+'/'+d.slice(2);el.value=d;if(d.length===10){const v=parseDMY(d);if(v&&v!==el.dataset.ymd)dmyCommit(el);}}
+function dmyCommit(el){const v=parseDMY(el.value);if(!v){toast('তারিখ ঠিক নয় — যেমন ২৪/১১/২০২৬ (24/11/2026)');el.value=toDMY(el.dataset.ymd);return;}if(v===el.dataset.ymd){el.value=toDMY(v);return;}setDval(el.id,v);if(DCB[el.id])DCB[el.id](v);}
+function dmyPick(id){const p=document.getElementById(id+'_p');try{p.showPicker();}catch(e){p.style.pointerEvents='auto';p.focus();p.click();}}
+function dmyPicked(id,v){if(!v)return;setDval(id,v);if(DCB[id])DCB[id](v);}
 
 /* ============ অটো ড্রপডাউন (সাজেশন) ============ */
 function sugg(type){
@@ -349,7 +366,7 @@ function vEntry(){
   <div class="card form">
     <h3>${ed?'এন্ট্রি সম্পাদনা':'নতুন হিসাব লিখুন'}${ed?'<button class="btn" onclick="go(\'entry\',{editId:null})">বাতিল</button>':''}</h3>
     <div class="seg" style="margin-bottom:14px"><button class="${t==='expense'?'on e':''}" onclick="setType('expense')">− খরচ</button><button class="${t==='income'?'on i':''}" onclick="setType('income')">+ আয়</button></div>
-    <label>তারিখ<input type="date" id="fDate" value="${ed?ed.date:st.date}"></label>
+    <label style="margin-bottom:0">তারিখ (দিন/মাস/বছর)</label>${dateBox('fDate',ed?ed.date:st.date,v=>{st.date=v;entryList();})}
     <label>খাত / ক্যাটাগরি<input id="fCat" list="dlCat" autocomplete="off" placeholder="${t==='expense'?'যেমন: বাজার':'যেমন: বেতন'}" value="${esc(ed?ed.category:'')}"></label>
     <label>বিবরণ / কী কিনলেন<input id="fItem" list="dlItem" autocomplete="off" placeholder="${t==='expense'?'যেমন: আলু, চাল, দুধ':'যেমন: নভেম্বরের বেতন'}" value="${esc(ed?ed.item:'')}"></label>
     <label>টাকার পরিমাণ (₹)<input type="number" id="fAmt" inputmode="decimal" min="0" step="any" placeholder="০" value="${ed?ed.amount:''}"></label>
@@ -363,8 +380,8 @@ function vEntry(){
   </div>`;
 }
 function setType(t){st.etype=t;const keep=collectForm();render();restoreForm(keep,true);}
-function collectForm(){return {date:fDate.value,cat:fCat.value,item:fItem.value,amt:fAmt.value,note:fNote.value};}
-function restoreForm(k,typeChanged){fDate.value=k.date;if(!typeChanged){fCat.value=k.cat;fItem.value=k.item;}fAmt.value=k.amt;fNote.value=k.note;fillItems();}
+function collectForm(){return {date:dval('fDate'),cat:fCat.value,item:fItem.value,amt:fAmt.value,note:fNote.value};}
+function restoreForm(k,typeChanged){setDval('fDate',k.date);if(!typeChanged){fCat.value=k.cat;fItem.value=k.item;}fAmt.value=k.amt;fNote.value=k.note;fillItems();}
 function entryInit(){
   const S=sugg(st.etype);
   dlCat.innerHTML=S.cats.map(c=>`<option value="${esc(c)}">`).join('');
@@ -373,7 +390,6 @@ function entryInit(){
   fCat.addEventListener('input',fillItems);
   fItem.addEventListener('change',()=>autoFromItem(false));
   fItem.addEventListener('input',()=>autoFromItem(false));
-  fDate.addEventListener('change',()=>{st.date=fDate.value;entryList();});
   [fCat,fItem,fAmt,fNote].forEach(el=>el.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();if(el===fNote||el===fAmt)saveEntry();else (el===fCat?fItem:fAmt).focus();}}));
   entryList();
   if(!st.editId)setTimeout(()=>fCat.value?fItem.focus():null,50);
@@ -391,7 +407,7 @@ function autoFromItem(force){
 }
 function pickItem(k){fItem.value=k;autoFromItem(true);fAmt.focus();}
 function entryList(){
-  const d=fDate.value||st.date;const L=live().filter(e=>e.date===d).sort((a,b)=>b.updatedAt-a.updatedAt);
+  const d=dval('fDate')||st.date;const L=live().filter(e=>e.date===d).sort((a,b)=>b.updatedAt-a.updatedAt);
   eListH.innerHTML=`${fmtDate(d)} <small>খরচ <b class="exp">${tk(sum(L,'expense'))}</b> · আয় <b class="inc">${tk(sum(L,'income'))}</b></small>`;
   eList.innerHTML=L.length?L.map(e=>rowHtml(e)).join(''):'<div class="empty">এই তারিখে এখনো কিছু লেখা হয়নি</div>';
 }
@@ -416,7 +432,7 @@ function vDaily(){
   for(let i=1;i<=n;i++){const ds=m+'-'+pad(i);const L=M.filter(e=>e.date===ds);if(!L.length)continue;const E=sum(L,'expense'),I=sum(L,'income');cE+=E;cI+=I;
     rows+=`<tr class="click" onclick="go('daily',{date:'${ds}'})" style="${ds===d?'background:#eef4ff':''}"><td>${bn(i)} ${MONS[mm-1]} <small class="hint">${WD[new Date(y,mm-1,i).getDay()]}</small></td><td class="exp">${E?tk(E):'–'}</td><td class="inc">${I?tk(I):'–'}</td><td>${bn(L.length)}</td></tr>`;}
   return `<div class="toolbar"><button class="btn" onclick="go('daily',{date:addDay(st.date,-1)})">◀ আগের দিন</button>
-    <input type="date" value="${d}" onchange="go('daily',{date:this.value})"><button class="btn" onclick="go('daily',{date:addDay(st.date,1)})">পরের দিন ▶</button>
+    ${dateBox('dDate',d,v=>go('daily',{date:v}))}<button class="btn" onclick="go('daily',{date:addDay(st.date,1)})">পরের দিন ▶</button>
     <button class="btn" onclick="go('daily',{date:today()})">আজ</button><span class="sp"></span><button class="btn p" onclick="go('entry',{editId:null,date:st.date})">＋ এই দিনে এন্ট্রি</button></div>
   <div class="grid g2"><div class="card"><h3>${fmtDate(d)}</h3>${dayDetail(d)}</div>
   <div class="card"><h3>${fmtMonth(m)} — দিন অনুযায়ী <small>দিনে চাপুন</small></h3>
@@ -618,7 +634,7 @@ function vSettings(){
 function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);}
 function exportJSON(){dl('bari-hisab-backup-'+today()+'.json',JSON.stringify({entries:db,extra:cfg.extra,hidden:cfg.hidden},null,1),'application/json');}
 function exportCSV(){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const rows=[['তারিখ','ধরন','খাত','বিবরণ','টাকা','নোট']].concat(live().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='expense'?'খরচ':'আয়',e.category,e.item,e.amount,e.note]));
+  const rows=[['তারিখ','ধরন','খাত','বিবরণ','টাকা','নোট']].concat(live().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[toDMY(e.date),e.type==='expense'?'খরচ':'আয়',e.category,e.item,e.amount,e.note]));
   dl('bari-hisab-'+today()+'.csv','﻿'+rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv');}
 function importJSON(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);const list=j.entries||j;const map=new Map(db.map(e=>[e.id,e]));let n=0;
   list.forEach(e=>{if(!e.id||!e.date)return;const l=map.get(e.id);if(!l||(+e.updatedAt||0)>(+l.updatedAt||0)){map.set(e.id,Object.assign({},e,{dirty:1}));n++;}});
