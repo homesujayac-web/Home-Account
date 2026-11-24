@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f3b5c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="বাড়ির হিসাব">
+<title>বাড়ির হিসাব</title>
+<style>
+:root{
+  --bg:#f4f6f9;--card:#fff;--ink:#1c2430;--mut:#6b7686;--line:#e3e7ee;
+  --side:#1f3b5c;--side2:#2a4b72;--acc:#2f6fdd;
+  --exp:#d64545;--inc:#1f9d63;--bal:#2f6fdd;--warn:#d98a1c;
+  --r:12px;--sh:0 1px 3px rgba(16,30,54,.08),0 4px 14px rgba(16,30,54,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Noto Sans Bengali","Hind Siliguri","Vrinda","Nirmala UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+.app{display:flex;min-height:100vh}
+/* sidebar */
+aside{width:236px;background:var(--side);color:#dfe8f5;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;z-index:30}
+.banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7e8;border:1px solid #f3d9a6;color:#7a4b06;border-radius:var(--r);padding:12px 16px;margin-bottom:14px;font-size:14px}
+.banner span{flex:1;min-width:180px}
+#installBtn{display:none}
+.brand{padding:max(20px,env(safe-area-inset-top)) 18px 14px;font-size:19px;font-weight:700;color:#fff;display:flex;gap:10px;align-items:center}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:#ffffff1f;display:grid;place-items:center;font-size:18px}
+nav{padding:6px 10px;flex:1;overflow:auto}
+nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:#cfdbec;padding:11px 12px;border-radius:9px;cursor:pointer;text-align:left;font-size:15px;margin-bottom:2px}
+nav button:hover{background:#ffffff12}
+nav button.on{background:var(--side2);color:#fff;font-weight:600}
+nav .ic{width:22px;text-align:center;font-size:17px}
+.sidefoot{padding:14px 16px;font-size:12.5px;color:#a9bbd3;border-top:1px solid #ffffff1a}
+.sidefoot b{color:#fff}
+.overlay{display:none}
+/* main */
+main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;padding:max(12px,env(safe-area-inset-top)) 20px 12px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu{display:none;border:0;background:none;font-size:22px;cursor:pointer;padding:4px 8px}
+.badge{font-size:12.5px;padding:5px 10px;border-radius:20px;background:#eef2f7;color:var(--mut);white-space:nowrap;cursor:pointer;border:0}
+.badge.ok{background:#e4f5ec;color:#167a4b}.badge.off{background:#fdf0dc;color:#9a5d08}.badge.err{background:#fde6e6;color:#b42a2a}.badge.busy{background:#e6eefc;color:#2453a8}
+.addbtn{border:0;background:var(--acc);color:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600;white-space:nowrap}
+#view{padding:20px;max-width:1180px;width:100%;margin:0 auto}
+/* cards */
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;min-width:0}
+.card h3{margin:0 0 12px;font-size:15.5px;display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.card h3 small{font-weight:400;color:var(--mut);font-size:12.5px}
+.stat .lbl{font-size:13px;color:var(--mut)}
+.stat .val{font-size:24px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat .sub{font-size:12.5px;color:var(--mut);margin-top:4px}
+.exp{color:var(--exp)}.inc{color:var(--inc)}.bal{color:var(--bal)}
+.up{color:var(--exp)}.down{color:var(--inc)}
+.stat{border-top:3px solid var(--line)}
+.stat.e{border-top-color:var(--exp)}.stat.i{border-top-color:var(--inc)}.stat.b{border-top-color:var(--bal)}
+.mt{margin-top:14px}
+/* controls */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar .sp{flex:1}
+input[type=date],input[type=month],input[type=number],input[type=text],input[type=url],input:not([type]),select{border:1px solid #cfd6e1;border-radius:9px;padding:9px 11px;background:#fff;min-width:0}
+input:focus,select:focus{outline:2px solid #2f6fdd55;border-color:var(--acc)}
+.btn{border:1px solid #cfd6e1;background:#fff;border-radius:9px;padding:8px 13px;cursor:pointer}
+.btn:hover{background:#f2f5fa}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn.d{color:var(--exp);border-color:#f0c4c4}
+.seg{display:inline-flex;background:#eef1f6;border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--mut)}
+.seg button.on.e{background:var(--exp);color:#fff}.seg button.on.i{background:var(--inc);color:#fff}.seg button.on.n{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+/* form */
+.form label{display:block;font-size:13px;color:var(--mut);margin-bottom:12px}
+.form label input{display:block;width:100%;margin-top:5px;font-size:16px;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+.chip{border:1px solid #d7dde7;background:#f8fafc;border-radius:20px;padding:5px 11px;font-size:13px;cursor:pointer}
+.chip:hover{background:#eaf0fb;border-color:#b9c9e6}
+.big{width:100%;padding:12px;font-size:16px}
+/* lists */
+.row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;min-width:0}
+.row .t b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t small{color:var(--mut);font-size:12.5px}
+.row .a{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ib{border:0;background:none;cursor:pointer;padding:4px 6px;border-radius:6px;color:var(--mut);font-size:15px}
+.ib:hover{background:#eef1f6}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pend{font-size:11px;color:var(--warn)}
+.empty{color:var(--mut);text-align:center;padding:24px 8px;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12.5px;color:var(--mut);font-weight:600;background:#f8fafc;position:sticky;top:0}
+tr.click{cursor:pointer}tr.click:hover td{background:#f4f8ff}
+tfoot td{font-weight:700;background:#f8fafc}
+.tw{overflow:auto;max-height:520px}
+/* hbars */
+.hb{margin-bottom:10px}
+.hb .l{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:3px;gap:8px}
+.hb .l span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .tr{height:9px;background:#eef1f6;border-radius:5px;overflow:hidden}
+.hb .f{height:100%;border-radius:5px}
+/* chart */
+.chart{width:100%;height:auto;display:block}
+.chart text{font-size:11px;fill:#7a8494;font-family:inherit}
+.chart .hit{fill:transparent;cursor:pointer}
+.chart .hit:hover{fill:#2f6fdd12}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hint{font-size:12px;color:var(--mut);margin-top:4px}
+.cmp{font-size:12.5px;font-weight:600}
+/* modal + toast */
+.modal{position:fixed;inset:0;background:#0f1b2b80;display:none;align-items:flex-end;justify-content:center;z-index:100;padding:0}
+.modal.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:560px;max-height:86vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 20px 24px}
+@media(min-width:700px){.modal{align-items:center}.sheet{border-radius:16px}}
+.sheet h2{margin:0 0 4px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);background:#1c2430;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:.25s;z-index:200;pointer-events:none;font-size:14px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.fab{display:none}
+code{background:#eef1f6;padding:1px 6px;border-radius:5px;font-size:13px}
+ol.steps li{margin-bottom:6px}
+/* responsive */
+@media(max-width:980px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:820px){
+  aside{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .22s;box-shadow:4px 0 20px #0003}
+  aside.open{transform:none}
+  .overlay.show{display:block;position:fixed;inset:0;background:#0006;z-index:25}
+  .menu{display:block}
+  .addbtn{display:none}
+  .fab{display:grid;place-items:center;position:fixed;right:18px;bottom:20px;width:56px;height:56px;border-radius:50%;background:var(--acc);color:#fff;font-size:28px;border:0;box-shadow:0 6px 18px #2f6fdd66;z-index:40;cursor:pointer}
+  #view{padding:14px 12px 90px}
+  .g2{grid-template-columns:minmax(0,1fr)}
+  .stat .val{font-size:20px}
+  .top{padding:10px 12px}
+}
+@media(max-width:420px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="side">
+    <div class="brand"><div class="logo">🏠</div>বাড়ির হিসাব</div>
+    <nav id="nav"></nav>
+    <div class="sidefoot" id="sidefoot"></div>
+  </aside>
+  <div class="overlay" id="ovl" onclick="sideToggle(false)"></div>
+  <main>
+    <div class="top">
+      <button class="menu" onclick="sideToggle(true)" aria-label="মেনু">☰</button>
+      <h1 id="title">ড্যাশবোর্ড</h1>
+      <button class="badge" id="installBtn" style="background:#e6eefc;color:#2453a8" onclick="installApp()">📲 ইনস্টল</button>
+      <button class="badge" id="badge" onclick="go('settings')">…</button>
+      <button class="addbtn" onclick="openEntry()">＋ নতুন এন্ট্রি</button>
+    </div>
+    <section id="view"></section>
+  </main>
+</div>
+<button class="fab" onclick="openEntry()" aria-label="নতুন এন্ট্রি">＋</button>
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= ডেটা ও সাহায্যকারী ================= */
+const KEY='bh_entries_v1', CFG='bh_cfg_v1';
+const MON=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const MONS=['জানু','ফেব্রু','মার্চ','এপ্রি','মে','জুন','জুলা','আগ','সেপ্টে','অক্টো','নভে','ডিসে'];
+const WD=['রবি','সোম','মঙ্গল','বুধ','বৃহঃ','শুক্র','শনি'];
+const DEF={
+  expense:['বাজার','মুদিখানা','দুধ','মাছ-মাংস','বিদ্যুৎ বিল','গ্যাস','যাতায়াত','শিক্ষা','চিকিৎসা','মোবাইল/ইন্টারনেট','পোশাক','অনুষ্ঠান/উপহার','মেরামত','অন্যান্য'],
+  income:['বেতন','ব্যবসা','কোচিং/টিউশন','ভাড়া','সুদ','অন্যান্য']
+};
+const BD='০১২৩৪৫৬৭৮৯';
+const bn=s=>String(s).replace(/\d/g,d=>BD[d]);
+const tk=n=>(n<0?'−':'')+'₹'+bn(Math.round(Math.abs(n)).toLocaleString('en-IN'));
+const short=n=>{n=Math.abs(n);return n>=1e7?bn((n/1e7).toFixed(1))+'কো':n>=1e5?bn((n/1e5).toFixed(1))+'লা':n>=1e3?bn((n/1e3).toFixed(n>=1e4?0:1))+'হা':bn(Math.round(n));};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ymd(new Date());
+const daysIn=(y,m)=>new Date(y,m,0).getDate();
+const fmtDate=s=>{const [y,m,d]=s.split('-');const w=new Date(+y,+m-1,+d).getDay();return bn(+d)+' '+MON[+m-1]+' '+bn(y)+', '+WD[w]+'বার';};
+const fmtMonth=s=>{const [y,m]=s.split('-');return MON[+m-1]+' '+bn(y);};
+const addMonth=(s,k)=>{let [y,m]=s.split('-').map(Number);m+=k;while(m<1){m+=12;y--}while(m>12){m-=12;y++}return y+'-'+pad(m);};
+const addDay=(s,k)=>{const [y,m,d]=s.split('-').map(Number);return ymd(new Date(y,m-1,d+k));};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+
+let db=load(KEY,[]);
+let cfg=Object.assign({url:'',lastSync:0,extra:[],hidden:[]},load(CFG,{}));
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));localStorage.setItem(CFG,JSON.stringify(cfg));}catch(e){toast('সংরক্ষণে সমস্যা হয়েছে')}}
+const live=()=>db.filter(e=>!e.deleted);
+const inPrefix=p=>live().filter(e=>e.date.startsWith(p));
+const sum=(list,t)=>list.reduce((a,e)=>a+(e.type===t?+e.amount||0:0),0);
+function byCat(list,t){const m={};list.forEach(e=>{if(e.type!==t)return;const c=e.category||'অন্যান্য';m[c]=(m[c]||0)+(+e.amount||0)});return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
+function pct(now,prev){if(!prev)return '';const p=Math.round((now-prev)/prev*100);return p===0?'সমান':(p>0?'▲ ':'▼ ')+bn(Math.abs(p))+'%';}
+function cmpTxt(now,prev,label,isExp=true){
+  if(!prev) return `<span class="hint">${label}: কোনো তথ্য নেই</span>`;
+  const up=now>prev; const cls=isExp?(up?'up':'down'):(up?'down':'up');
+  return `<span class="cmp ${cls}">${pct(now,prev)}</span> <span class="hint">${label} (${tk(prev)})</span>`;
+}
+
+/* ============ অটো ড্রপডাউন (সাজেশন) ============ */
+function sugg(type){
+  const hid=new Set(cfg.hidden||[]);const cats={},items={};
+  DEF[type].forEach(c=>cats[c]=0);
+  (cfg.extra||[]).filter(x=>x.type===type).forEach(x=>{if(x.cat&&!(x.cat in cats))cats[x.cat]=0;if(x.item&&!items[x.item])items[x.item]={n:0,cat:x.cat||'',last:''};});
+  live().filter(e=>e.type===type).sort((a,b)=>a.updatedAt-b.updatedAt).forEach(e=>{
+    if(e.category)cats[e.category]=(cats[e.category]||0)+1;
+    if(e.item){const it=items[e.item]||(items[e.item]={n:0});it.n++;it.cat=e.category;it.last=e.amount;}
+  });
+  const catList=Object.keys(cats).filter(c=>!hid.has(type+'|c|'+c)).sort((a,b)=>cats[b]-cats[a]);
+  Object.keys(items).forEach(k=>{if(hid.has(type+'|i|'+k))delete items[k]});
+  const top=Object.entries(items).filter(([,v])=>v.n>0).sort((a,b)=>b[1].n-a[1].n).slice(0,12).map(([k])=>k);
+  return {cats:catList,catCount:cats,items,top};
+}
+
+/* ================= নেভিগেশন ================= */
+const VIEWS=[
+  ['dash','📊','ড্যাশবোর্ড'],['entry','✍️','নতুন এন্ট্রি'],['daily','📅','দৈনিক হিসাব'],
+  ['monthly','🗓️','মাসিক হিসাব'],['yearly','📈','বার্ষিক হিসাব'],['compare','⚖️','তুলনা'],
+  ['items','🏷️','খাত ও আইটেম'],['settings','⚙️','সিঙ্ক ও সেটিংস']
+];
+const st={view:'dash',date:today(),month:today().slice(0,7),year:today().slice(0,4),editId:null,etype:'expense',cmpMode:'month',cmpA:addMonth(today().slice(0,7),-1),cmpB:today().slice(0,7),cmpYA:String(+today().slice(0,4)-1),cmpYB:today().slice(0,4)};
+function renderNav(){document.getElementById('nav').innerHTML=VIEWS.map(([k,i,t])=>`<button class="${st.view===k?'on':''}" onclick="go('${k}')"><span class="ic">${i}</span>${t}</button>`).join('');}
+function go(v,opts={}){Object.assign(st,opts);if(v!=='entry')st.editId=opts.editId||null;st.view=v;sideToggle(false);render();window.scrollTo(0,0);}
+function sideToggle(o){document.getElementById('side').classList.toggle('open',o);document.getElementById('ovl').classList.toggle('show',o);}
+function openEntry(){go('entry',{editId:null});}
+function render(){
+  CH={};chN=0;renderNav();
+  document.getElementById('title').textContent=VIEWS.find(v=>v[0]===st.view)[2];
+  const v=document.getElementById('view');
+  v.innerHTML=({dash:vDash,entry:vEntry,daily:vDaily,monthly:vMonthly,yearly:vYearly,compare:vCompare,items:vItems,settings:vSettings})[st.view]();
+  if(st.view==='entry')entryInit();
+  document.querySelector('.fab').style.visibility=st.view==='entry'?'hidden':'';
+  syncBadge();
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1900);}
+function openModal(h){document.getElementById('sheet').innerHTML=h;document.getElementById('modal').classList.add('show');}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+/* ================= চার্ট ================= */
+let CH={},chN=0;
+function niceMax(m){if(m<=0)return 100;const p=Math.pow(10,Math.floor(Math.log10(m)));const f=m/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+function bars(labels,series,{h=230,onClick=null,every=1,tip=null}={}){
+  const id='c'+(chN++);if(onClick)CH[id]=onClick;
+  const W=640,pl=46,pr=8,pt=12,pb=26,n=labels.length;
+  const mx=niceMax(Math.max(0,...series.flatMap(s=>s.values)));
+  const gw=(W-pl-pr)/n,bw=Math.max(2,Math.min(26,gw*0.78/series.length));
+  let g='';
+  for(let k=0;k<=4;k++){const y=pt+(h-pt-pb)*(1-k/4);g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#e8ecf2"/><text x="${pl-6}" y="${y+4}" text-anchor="end">${short(mx*k/4)}</text>`;}
+  for(let i=0;i<n;i++){
+    const x0=pl+gw*i,cx=x0+gw/2,tot=series.length*bw;
+    series.forEach((s,j)=>{const v=s.values[i]||0;const bh=(h-pt-pb)*v/mx;if(v>0)g+=`<rect x="${cx-tot/2+j*bw}" y="${h-pb-bh}" width="${bw-1}" height="${bh}" rx="2" fill="${s.color}"/>`;});
+    if(i%every===0||i===n-1)g+=`<text x="${cx}" y="${h-8}" text-anchor="middle">${labels[i]}</text>`;
+    const t=tip?tip(i):labels[i]+' — '+series.map(s=>s.name+': '+tk(s.values[i]||0)).join(', ');
+    g+=`<rect class="hit" x="${x0}" y="${pt}" width="${gw}" height="${h-pt-pb}" ${onClick?`onclick="CH['${id}'](${i})"`:''}><title>${esc(t)}</title></rect>`;
+  }
+  return `<svg class="chart" viewBox="0 0 ${W} ${h}">${g}</svg>`+legend(series);
+}
+function lines(labels,series,{h=240}={}){
+  const W=640,pl=46,pr=10,pt=12,pb=26,n=labels.length;
+  const mx=niceMax(Math.max(0,...series.flatMap(s=>s.values)));
+  const X=i=>pl+(W-pl-pr)*(n<2?0.5:i/(n-1)),Y=v=>pt+(h-pt-pb)*(1-v/mx);
+  let g='';
+  for(let k=0;k<=4;k++){const y=Y(mx*k/4);g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#e8ecf2"/><text x="${pl-6}" y="${y+4}" text-anchor="end">${short(mx*k/4)}</text>`;}
+  labels.forEach((l,i)=>g+=`<text x="${X(i)}" y="${h-8}" text-anchor="middle">${l}</text>`);
+  series.forEach(s=>{g+=`<polyline fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" points="${s.values.map((v,i)=>X(i)+','+Y(v||0)).join(' ')}"/>`;
+    s.values.forEach((v,i)=>g+=`<circle cx="${X(i)}" cy="${Y(v||0)}" r="3.5" fill="#fff" stroke="${s.color}" stroke-width="2"><title>${esc(s.name+' '+labels[i]+': '+tk(v||0))}</title></circle>`);});
+  return `<svg class="chart" viewBox="0 0 ${W} ${h}">${g}</svg>`+legend(series);
+}
+const legend=s=>s.length>1?`<div class="legend">${s.map(x=>`<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}</div>`:'';
+function hbars(list,color,total){if(!list.length)return '<div class="empty">কোনো তথ্য নেই</div>';const mx=list[0][1]||1;total=total||list.reduce((a,b)=>a+b[1],0);
+  return list.map(([k,v])=>`<div class="hb"><div class="l"><span>${esc(k)}</span><span><b>${tk(v)}</b> <small class="hint">${bn(Math.round(v/total*100))}%</small></span></div><div class="tr"><div class="f" style="width:${v/mx*100}%;background:${color}"></div></div></div>`).join('');}
+const YCOL=['#2f6fdd','#d64545','#1f9d63','#d98a1c','#8b5cf6','#0ea5b7'];
+
+/* ================= এন্ট্রি তালিকা ================= */
+function rowHtml(e,showDate){
+  return `<div class="row"><span class="dot" style="background:${e.type==='expense'?'var(--exp)':'var(--inc)'}"></span>
+  <div class="t"><b>${esc(e.item||e.category)}</b><small>${esc(e.category)}${showDate?' · '+bn(e.date.slice(8))+' '+MONS[+e.date.slice(5,7)-1]:''}${e.note?' · '+esc(e.note):''}${e.dirty?' · <span class="pend">সিঙ্ক বাকি</span>':''}</small></div>
+  <div class="a ${e.type==='expense'?'exp':'inc'}">${e.type==='expense'?'−':'+'}${tk(e.amount)}</div>
+  <button class="ib" title="সম্পাদনা" onclick="closeModal();go('entry',{editId:'${e.id}'})">✏️</button>
+  <button class="ib" title="মুছুন" onclick="delEntry('${e.id}')">🗑️</button></div>`;
+}
+function dayDetail(date){
+  const L=live().filter(e=>e.date===date);const ex=L.filter(e=>e.type==='expense'),inc=L.filter(e=>e.type==='income');
+  const E=sum(L,'expense'),I=sum(L,'income');
+  return `<div class="grid g3" style="margin:10px 0 6px">
+    <div class="stat e card" style="box-shadow:none;background:#fbf3f3;padding:10px"><div class="lbl">খরচ</div><div class="val exp" style="font-size:18px">${tk(E)}</div></div>
+    <div class="stat i card" style="box-shadow:none;background:#f0f9f4;padding:10px"><div class="lbl">আয়</div><div class="val inc" style="font-size:18px">${tk(I)}</div></div>
+    <div class="stat b card" style="box-shadow:none;background:#f0f4fd;padding:10px"><div class="lbl">ব্যালেন্স</div><div class="val bal" style="font-size:18px">${tk(I-E)}</div></div></div>
+    <h4 style="margin:14px 0 2px" class="exp">কী কী খরচ হয়েছে (${bn(ex.length)}টি)</h4>${ex.length?ex.map(e=>rowHtml(e)).join(''):'<div class="empty">এই দিনে কোনো খরচ নেই</div>'}
+    <h4 style="margin:14px 0 2px" class="inc">কী কী আয় হয়েছে (${bn(inc.length)}টি)</h4>${inc.length?inc.map(e=>rowHtml(e)).join(''):'<div class="empty">এই দিনে কোনো আয় নেই</div>'}`;
+}
+function showDay(date){
+  openModal(`<h2>${fmtDate(date)}<button class="ib" onclick="closeModal()">✕</button></h2>${dayDetail(date)}
+  <div style="display:flex;gap:8px;margin-top:14px"><button class="btn p" onclick="closeModal();go('entry',{editId:null,date:'${date}'})">＋ এই দিনে এন্ট্রি</button><button class="btn" onclick="closeModal();go('daily',{date:'${date}'})">দৈনিক পাতায় দেখুন</button></div>`);
+}
+function delEntry(id){
+  const e=db.find(x=>x.id===id);if(!e)return;
+  if(!confirm(`"${e.item||e.category}" (${tk(e.amount)}) মুছে ফেলবেন?`))return;
+  e.deleted=true;e.updatedAt=Date.now();e.dirty=1;persist();closeModal();render();toast('মুছে ফেলা হয়েছে');sync();
+}
+
+/* ================= ড্যাশবোর্ড ================= */
+function vDash(){
+  const td=today(),m=td.slice(0,7),y=td.slice(0,4),pm=addMonth(m,-1);
+  const T=live().filter(e=>e.date===td),M=inPrefix(m),PM=inPrefix(pm),Y=inPrefix(y);
+  const mE=sum(M,'expense'),mI=sum(M,'income'),pE=sum(PM,'expense');
+  // গত মাসের একই দিন পর্যন্ত
+  const dnum=+td.slice(8);const pSame=PM.filter(e=>+e.date.slice(8)<=dnum);
+  const yE=sum(Y,'expense'),yI=sum(Y,'income');
+  // শেষ ৩০ দিন
+  const days=[];for(let i=29;i>=0;i--)days.push(addDay(td,-i));
+  const dE=days.map(d=>sum(live().filter(e=>e.date===d),'expense')),dI=days.map(d=>sum(live().filter(e=>e.date===d),'income'));
+  const ms=[...Array(12)].map((_,i)=>y+'-'+pad(i+1));
+  const recent=[...live()].sort((a,b)=>(b.date+b.updatedAt).localeCompare(a.date+a.updatedAt)).slice(0,8);
+  return `${hasSync()?'':`<div class="banner"><span>☁️ অনলাইন সিঙ্ক এখনো চালু হয়নি — হিসাব শুধু এই ফোনে আছে। Google Sheet-এর লিংক বসালে সব ডিভাইসে থাকবে ও ব্যাকআপ হবে।</span><button class="btn" onclick="go('settings')">সিঙ্ক চালু করুন</button></div>`}
+  <div class="grid g4">
+    <div class="card stat e"><div class="lbl">আজকের খরচ</div><div class="val exp">${tk(sum(T,'expense'))}</div><div class="sub">আয়: <b class="inc">${tk(sum(T,'income'))}</b> · ${bn(T.length)}টি এন্ট্রি</div></div>
+    <div class="card stat e"><div class="lbl">এই মাসের খরচ (${MON[+m.slice(5)-1]})</div><div class="val exp">${tk(mE)}</div><div class="sub">${cmpTxt(mE,sum(pSame,'expense'),'গত মাসের এই সময়ের তুলনায়')}</div></div>
+    <div class="card stat i"><div class="lbl">এই মাসের আয়</div><div class="val inc">${tk(mI)}</div><div class="sub">গত মাসে মোট খরচ ছিল ${tk(pE)}</div></div>
+    <div class="card stat b"><div class="lbl">এই মাসের ব্যালেন্স</div><div class="val ${mI-mE<0?'exp':'bal'}">${tk(mI-mE)}</div><div class="sub">বছরে: আয় ${tk(yI)} · খরচ ${tk(yE)}</div></div>
+  </div>
+  <div class="card mt"><h3>শেষ ৩০ দিনের দৈনিক খরচ ও আয় <small>যেকোনো দিনের বারে চাপুন → সেদিনের সব হিসাব</small></h3>
+    ${bars(days.map(d=>bn(+d.slice(8))),[{name:'খরচ',color:'var(--exp)',values:dE},{name:'আয়',color:'var(--inc)',values:dI}],{every:3,onClick:i=>showDay(days[i]),tip:i=>fmtDate(days[i])+' — খরচ '+tk(dE[i])+', আয় '+tk(dI[i])})}</div>
+  <div class="grid g2 mt">
+    <div class="card"><h3>${bn(y)} সালের মাসওয়ারি <small>মাসে চাপুন → মাসিক হিসাব</small></h3>
+      ${bars(MONS,[{name:'খরচ',color:'var(--exp)',values:ms.map(k=>sum(inPrefix(k),'expense'))},{name:'আয়',color:'var(--inc)',values:ms.map(k=>sum(inPrefix(k),'income'))}],{onClick:i=>go('monthly',{month:ms[i]})})}</div>
+    <div class="card"><h3>এই মাসে কোন খাতে কত খরচ</h3>${hbars(byCat(M,'expense').slice(0,7),'var(--exp)')}</div>
+  </div>
+  <div class="card mt"><h3>সাম্প্রতিক এন্ট্রি <button class="btn" onclick="go('daily')">সব দেখুন</button></h3>
+    ${recent.length?recent.map(e=>rowHtml(e,true)).join(''):`<div class="empty">এখনো কোনো হিসাব লেখা হয়নি।<br><br><button class="btn p" onclick="openEntry()">＋ প্রথম এন্ট্রি লিখুন</button></div>`}</div>`;
+}
+
+/* ================= নতুন এন্ট্রি ================= */
+function vEntry(){
+  const ed=st.editId?db.find(e=>e.id===st.editId):null;
+  if(ed)st.etype=ed.type;
+  const t=st.etype;
+  return `<div class="grid g2">
+  <div class="card form">
+    <h3>${ed?'এন্ট্রি সম্পাদনা':'নতুন হিসাব লিখুন'}${ed?'<button class="btn" onclick="go(\'entry\',{editId:null})">বাতিল</button>':''}</h3>
+    <div class="seg" style="margin-bottom:14px"><button class="${t==='expense'?'on e':''}" onclick="setType('expense')">− খরচ</button><button class="${t==='income'?'on i':''}" onclick="setType('income')">+ আয়</button></div>
+    <label>তারিখ<input type="date" id="fDate" value="${ed?ed.date:st.date}"></label>
+    <label>খাত / ক্যাটাগরি<input id="fCat" list="dlCat" autocomplete="off" placeholder="${t==='expense'?'যেমন: বাজার':'যেমন: বেতন'}" value="${esc(ed?ed.category:'')}"></label>
+    <label>বিবরণ / কী কিনলেন<input id="fItem" list="dlItem" autocomplete="off" placeholder="${t==='expense'?'যেমন: আলু, চাল, দুধ':'যেমন: নভেম্বরের বেতন'}" value="${esc(ed?ed.item:'')}"></label>
+    <label>টাকার পরিমাণ (₹)<input type="number" id="fAmt" inputmode="decimal" min="0" step="any" placeholder="০" value="${ed?ed.amount:''}"></label>
+    <label>নোট (ঐচ্ছিক)<input id="fNote" autocomplete="off" value="${esc(ed?ed.note:'')}"></label>
+    <div class="hint" style="margin:-4px 0 6px">বারবার ব্যবহৃত (চাপলেই বসে যাবে):</div>
+    <div class="chips" id="chips"></div>
+    <button class="btn p big" onclick="saveEntry()">${ed?'পরিবর্তন সংরক্ষণ':'সংরক্ষণ করুন'}</button>
+    <datalist id="dlCat"></datalist><datalist id="dlItem"></datalist>
+  </div>
+  <div class="card"><h3 id="eListH"></h3><div id="eList"></div></div>
+  </div>`;
+}
+function setType(t){st.etype=t;const keep=collectForm();render();restoreForm(keep,true);}
+function collectForm(){return {date:fDate.value,cat:fCat.value,item:fItem.value,amt:fAmt.value,note:fNote.value};}
+function restoreForm(k,typeChanged){fDate.value=k.date;if(!typeChanged){fCat.value=k.cat;fItem.value=k.item;}fAmt.value=k.amt;fNote.value=k.note;fillItems();}
+function entryInit(){
+  const S=sugg(st.etype);
+  dlCat.innerHTML=S.cats.map(c=>`<option value="${esc(c)}">`).join('');
+  chips.innerHTML=S.top.length?S.top.map(k=>`<button class="chip" onclick="pickItem(this.dataset.k)" data-k="${esc(k)}">${esc(k)}</button>`).join(''):S.cats.slice(0,8).map(c=>`<button class="chip" onclick="fCat.value=this.dataset.k;fillItems();fItem.focus()" data-k="${esc(c)}">${esc(c)}</button>`).join('');
+  fillItems();
+  fCat.addEventListener('input',fillItems);
+  fItem.addEventListener('change',()=>autoFromItem(false));
+  fItem.addEventListener('input',()=>autoFromItem(false));
+  fDate.addEventListener('change',()=>{st.date=fDate.value;entryList();});
+  [fCat,fItem,fAmt,fNote].forEach(el=>el.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();if(el===fNote||el===fAmt)saveEntry();else (el===fCat?fItem:fAmt).focus();}}));
+  entryList();
+  if(!st.editId)setTimeout(()=>fCat.value?fItem.focus():null,50);
+}
+function fillItems(){
+  const S=sugg(st.etype),c=fCat.value.trim();
+  let keys=Object.keys(S.items);if(c){const f=keys.filter(k=>S.items[k].cat===c);if(f.length)keys=f;}
+  keys.sort((a,b)=>S.items[b].n-S.items[a].n);
+  dlItem.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(S.items[k].cat||'')}</option>`).join('');
+}
+function autoFromItem(force){
+  const S=sugg(st.etype),it=S.items[fItem.value.trim()];if(!it)return;
+  if(it.cat&&(force||!fCat.value.trim()))fCat.value=it.cat;
+  if(it.last)fAmt.placeholder='গতবার '+it.last;
+}
+function pickItem(k){fItem.value=k;autoFromItem(true);fAmt.focus();}
+function entryList(){
+  const d=fDate.value||st.date;const L=live().filter(e=>e.date===d).sort((a,b)=>b.updatedAt-a.updatedAt);
+  eListH.innerHTML=`${fmtDate(d)} <small>খরচ <b class="exp">${tk(sum(L,'expense'))}</b> · আয় <b class="inc">${tk(sum(L,'income'))}</b></small>`;
+  eList.innerHTML=L.length?L.map(e=>rowHtml(e)).join(''):'<div class="empty">এই তারিখে এখনো কিছু লেখা হয়নি</div>';
+}
+function saveEntry(){
+  const f=collectForm();const amt=parseFloat(f.amt);
+  if(!f.date){toast('তারিখ দিন');return;}
+  if(!f.cat.trim()&&!f.item.trim()){toast('খাত বা বিবরণ লিখুন');fCat.focus();return;}
+  if(!(amt>0)){toast('টাকার পরিমাণ লিখুন');fAmt.focus();return;}
+  const cat=f.cat.trim()||(sugg(st.etype).items[f.item.trim()]||{}).cat||'অন্যান্য';
+  const rec={date:f.date,type:st.etype,category:cat,item:f.item.trim(),amount:Math.round(amt*100)/100,note:f.note.trim(),updatedAt:Date.now(),deleted:false,dirty:1};
+  if(st.editId){const e=db.find(x=>x.id===st.editId);Object.assign(e,rec);st.editId=null;toast('পরিবর্তন সংরক্ষিত ✓');persist();st.date=f.date;render();}
+  else{db.push(Object.assign({id:uid()},rec));persist();toast((st.etype==='expense'?'খরচ':'আয়')+' সংরক্ষিত ✓');st.date=f.date;
+    // ফর্ম আবার নতুন করে (ড্রপডাউন আপডেট হবে), তারিখ-খাত রেখে
+    render();fCat.value=cat;fillItems();fItem.focus();}
+  sync();
+}
+
+/* ================= দৈনিক ================= */
+function vDaily(){
+  const d=st.date,m=d.slice(0,7),[y,mm]=m.split('-').map(Number),n=daysIn(y,mm);
+  const M=inPrefix(m);let rows='',cE=0,cI=0;
+  for(let i=1;i<=n;i++){const ds=m+'-'+pad(i);const L=M.filter(e=>e.date===ds);if(!L.length)continue;const E=sum(L,'expense'),I=sum(L,'income');cE+=E;cI+=I;
+    rows+=`<tr class="click" onclick="go('daily',{date:'${ds}'})" style="${ds===d?'background:#eef4ff':''}"><td>${bn(i)} ${MONS[mm-1]} <small class="hint">${WD[new Date(y,mm-1,i).getDay()]}</small></td><td class="exp">${E?tk(E):'–'}</td><td class="inc">${I?tk(I):'–'}</td><td>${bn(L.length)}</td></tr>`;}
+  return `<div class="toolbar"><button class="btn" onclick="go('daily',{date:addDay(st.date,-1)})">◀ আগের দিন</button>
+    <input type="date" value="${d}" onchange="go('daily',{date:this.value})"><button class="btn" onclick="go('daily',{date:addDay(st.date,1)})">পরের দিন ▶</button>
+    <button class="btn" onclick="go('daily',{date:today()})">আজ</button><span class="sp"></span><button class="btn p" onclick="go('entry',{editId:null,date:st.date})">＋ এই দিনে এন্ট্রি</button></div>
+  <div class="grid g2"><div class="card"><h3>${fmtDate(d)}</h3>${dayDetail(d)}</div>
+  <div class="card"><h3>${fmtMonth(m)} — দিন অনুযায়ী <small>দিনে চাপুন</small></h3>
+    <div class="tw"><table><thead><tr><th>তারিখ</th><th>খরচ</th><th>আয়</th><th>এন্ট্রি</th></tr></thead><tbody>${rows||'<tr><td colspan=4 class="empty">এই মাসে কোনো এন্ট্রি নেই</td></tr>'}</tbody>
+    <tfoot><tr><td>মোট</td><td class="exp">${tk(cE)}</td><td class="inc">${tk(cI)}</td><td></td></tr></tfoot></table></div></div></div>`;
+}
+
+/* ================= মাসিক ================= */
+function vMonthly(){
+  const m=st.month,[y,mm]=m.split('-').map(Number),n=daysIn(y,mm);
+  const M=inPrefix(m),P=inPrefix(addMonth(m,-1)),LY=inPrefix(addMonth(m,-12));
+  const E=sum(M,'expense'),I=sum(M,'income');
+  const days=[...Array(n)].map((_,i)=>m+'-'+pad(i+1));
+  const dE=days.map(d=>sum(M.filter(e=>e.date===d),'expense')),dI=days.map(d=>sum(M.filter(e=>e.date===d),'income'));
+  const isCur=m===today().slice(0,7);const passed=isCur?+today().slice(8):n;
+  const maxI=dE.indexOf(Math.max(...dE));
+  return `<div class="toolbar"><button class="btn" onclick="go('monthly',{month:addMonth(st.month,-1)})">◀</button>
+    <input type="month" value="${m}" onchange="go('monthly',{month:this.value})"><button class="btn" onclick="go('monthly',{month:addMonth(st.month,1)})">▶</button>
+    <button class="btn" onclick="go('monthly',{month:today().slice(0,7)})">এই মাস</button></div>
+  <div class="grid g4">
+    <div class="card stat e"><div class="lbl">${fmtMonth(m)} — মোট খরচ</div><div class="val exp">${tk(E)}</div><div class="sub">${cmpTxt(E,sum(P,'expense'),'গত মাস')}</div></div>
+    <div class="card stat i"><div class="lbl">মোট আয়</div><div class="val inc">${tk(I)}</div><div class="sub">${cmpTxt(I,sum(P,'income'),'গত মাস',false)}</div></div>
+    <div class="card stat b"><div class="lbl">আয় − খরচ (সঞ্চয়)</div><div class="val ${I-E<0?'exp':'bal'}">${tk(I-E)}</div><div class="sub">${I?'আয়ের '+bn(Math.round(E/I*100))+'% খরচ হয়েছে':'আয় লেখা হয়নি'}</div></div>
+    <div class="card stat"><div class="lbl">দৈনিক গড় খরচ</div><div class="val">${tk(E/Math.max(1,passed))}</div><div class="sub">${E?'সবচেয়ে বেশি: '+bn(maxI+1)+' তারিখ ('+tk(dE[maxI])+')':''}</div></div>
+  </div>
+  <div class="card mt"><h3>দিন অনুযায়ী খরচ ও আয় <small>বারে চাপুন → সেদিনের বিস্তারিত</small></h3>
+    ${bars(days.map((_,i)=>bn(i+1)),[{name:'খরচ',color:'var(--exp)',values:dE},{name:'আয়',color:'var(--inc)',values:dI}],{every:n>20?2:1,onClick:i=>showDay(days[i]),tip:i=>fmtDate(days[i])+' — খরচ '+tk(dE[i])+', আয় '+tk(dI[i])})}</div>
+  <div class="grid g2 mt">
+    <div class="card"><h3 class="exp">খাত অনুযায়ী খরচ</h3>${hbars(byCat(M,'expense'),'var(--exp)')}</div>
+    <div class="card"><h3 class="inc">খাত অনুযায়ী আয়</h3>${hbars(byCat(M,'income'),'var(--inc)')}</div>
+  </div>
+  <div class="card mt"><h3>তুলনা <small>গত মাস ও গত বছরের একই মাস</small></h3>${catCompare(M,P,LY,fmtMonth(addMonth(m,-1)),fmtMonth(addMonth(m,-12)),'এই মাস')}</div>`;
+}
+function catCompare(A,B,C,bl,cl,al){
+  const cats=new Set([...byCat(A,'expense'),...byCat(B,'expense'),...(C?byCat(C,'expense'):[])].map(x=>x[0]));
+  const g=(L,c)=>L.filter(e=>e.type==='expense'&&(e.category||'অন্যান্য')===c).reduce((a,e)=>a+ +e.amount,0);
+  const rows=[...cats].map(c=>[c,g(A,c),g(B,c),C?g(C,c):0]).sort((a,b)=>b[1]-a[1]);
+  if(!rows.length)return '<div class="empty">তুলনার মতো তথ্য নেই</div>';
+  const df=(a,b)=>{const d=a-b;return d===0?'–':`<span class="${d>0?'up':'down'}">${d>0?'+':''}${tk(d)}</span>`};
+  return `<div class="tw"><table><thead><tr><th>খাত</th><th>${al}</th><th>${bl}</th><th>পার্থক্য</th>${C?`<th>${cl}</th><th>পার্থক্য</th>`:''}</tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${esc(r[0])}</td><td><b>${tk(r[1])}</b></td><td>${tk(r[2])}</td><td>${df(r[1],r[2])}</td>${C?`<td>${tk(r[3])}</td><td>${df(r[1],r[3])}</td>`:''}</tr>`).join('')}</tbody>
+  <tfoot><tr><td>মোট খরচ</td><td>${tk(sum(A,'expense'))}</td><td>${tk(sum(B,'expense'))}</td><td>${df(sum(A,'expense'),sum(B,'expense'))}</td>${C?`<td>${tk(sum(C,'expense'))}</td><td>${df(sum(A,'expense'),sum(C,'expense'))}</td>`:''}</tr>
+  <tr><td>মোট আয়</td><td>${tk(sum(A,'income'))}</td><td>${tk(sum(B,'income'))}</td><td></td>${C?`<td>${tk(sum(C,'income'))}</td><td></td>`:''}</tr></tfoot></table></div>`;
+}
+
+/* ================= বার্ষিক ================= */
+function years(){const s=new Set(live().map(e=>e.date.slice(0,4)));s.add(today().slice(0,4));return [...s].sort();}
+function vYearly(){
+  const y=st.year,Y=inPrefix(y),PY=inPrefix(String(+y-1));
+  const ms=[...Array(12)].map((_,i)=>y+'-'+pad(i+1));
+  const mE=ms.map(k=>sum(inPrefix(k),'expense')),mI=ms.map(k=>sum(inPrefix(k),'income')),pE=ms.map(k=>sum(inPrefix(String(+y-1)+k.slice(4)),'expense'));
+  const E=sum(Y,'expense'),I=sum(Y,'income');const act=mE.filter(v=>v>0).length||1;
+  let run=0;
+  return `<div class="toolbar"><button class="btn" onclick="go('yearly',{year:String(+st.year-1)})">◀</button>
+    <select onchange="go('yearly',{year:this.value})">${years().map(v=>`<option ${v===y?'selected':''} value="${v}">${bn(v)}</option>`).join('')}</select>
+    <button class="btn" onclick="go('yearly',{year:String(+st.year+1)})">▶</button></div>
+  <div class="grid g4">
+    <div class="card stat e"><div class="lbl">${bn(y)} — মোট খরচ</div><div class="val exp">${tk(E)}</div><div class="sub">${cmpTxt(E,sum(PY,'expense'),'গত বছর')}</div></div>
+    <div class="card stat i"><div class="lbl">মোট আয়</div><div class="val inc">${tk(I)}</div><div class="sub">${cmpTxt(I,sum(PY,'income'),'গত বছর',false)}</div></div>
+    <div class="card stat b"><div class="lbl">বছরের সঞ্চয়</div><div class="val ${I-E<0?'exp':'bal'}">${tk(I-E)}</div></div>
+    <div class="card stat"><div class="lbl">মাসিক গড় খরচ</div><div class="val">${tk(E/act)}</div><div class="sub">${bn(act)} মাসের হিসাবে</div></div>
+  </div>
+  <div class="card mt"><h3>মাস অনুযায়ী আয় ও খরচ <small>মাসে চাপুন → মাসিক বিস্তারিত</small></h3>
+    ${bars(MONS,[{name:'খরচ',color:'var(--exp)',values:mE},{name:'আয়',color:'var(--inc)',values:mI}],{onClick:i=>go('monthly',{month:ms[i]})})}</div>
+  <div class="grid g2 mt">
+    <div class="card"><h3>খরচ: ${bn(y)} বনাম ${bn(+y-1)}</h3>${lines(MONS,[{name:bn(y),color:'var(--exp)',values:mE},{name:bn(+y-1),color:'#9aa6b8',values:pE}])}</div>
+    <div class="card"><h3>খাত অনুযায়ী বছরের খরচ</h3>${hbars(byCat(Y,'expense').slice(0,10),'var(--exp)')}</div>
+  </div>
+  <div class="card mt"><h3>মাসওয়ারি হিসাব</h3><div class="tw"><table><thead><tr><th>মাস</th><th>আয়</th><th>খরচ</th><th>সঞ্চয়</th><th>জমা সঞ্চয়</th><th>গত বছর খরচ</th></tr></thead><tbody>
+  ${ms.map((k,i)=>{run+=mI[i]-mE[i];return `<tr class="click" onclick="go('monthly',{month:'${k}'})"><td>${MON[i]}</td><td class="inc">${tk(mI[i])}</td><td class="exp">${tk(mE[i])}</td><td class="${mI[i]-mE[i]<0?'exp':'bal'}">${tk(mI[i]-mE[i])}</td><td>${tk(run)}</td><td class="hint">${tk(pE[i])}</td></tr>`}).join('')}</tbody>
+  <tfoot><tr><td>মোট</td><td class="inc">${tk(I)}</td><td class="exp">${tk(E)}</td><td>${tk(I-E)}</td><td></td><td>${tk(sum(PY,'expense'))}</td></tr></tfoot></table></div></div>`;
+}
+
+/* ================= তুলনা ================= */
+function vCompare(){
+  const md=st.cmpMode;
+  let body='';
+  if(md==='month'){
+    const A=inPrefix(st.cmpA),B=inPrefix(st.cmpB);
+    const ea=sum(A,'expense'),eb=sum(B,'expense'),ia=sum(A,'income'),ib=sum(B,'income');
+    body=`<div class="toolbar"><input type="month" value="${st.cmpA}" onchange="go('compare',{cmpA:this.value})"> <b>বনাম</b> <input type="month" value="${st.cmpB}" onchange="go('compare',{cmpB:this.value})"></div>
+    <div class="grid g3">
+      <div class="card stat e"><div class="lbl">খরচ</div><div class="val exp">${tk(eb)}</div><div class="sub">${cmpTxt(eb,ea,fmtMonth(st.cmpA))}</div></div>
+      <div class="card stat i"><div class="lbl">আয়</div><div class="val inc">${tk(ib)}</div><div class="sub">${cmpTxt(ib,ia,fmtMonth(st.cmpA),false)}</div></div>
+      <div class="card stat b"><div class="lbl">সঞ্চয়</div><div class="val bal">${tk(ib-eb)}</div><div class="sub">${fmtMonth(st.cmpA)}: ${tk(ia-ea)}</div></div></div>
+    <div class="card mt"><h3>${fmtMonth(st.cmpB)} বনাম ${fmtMonth(st.cmpA)} — খাত অনুযায়ী</h3>${catCompare(B,A,null,fmtMonth(st.cmpA),'',fmtMonth(st.cmpB))}</div>`;
+  }else if(md==='year'){
+    const A=inPrefix(st.cmpYA),B=inPrefix(st.cmpYB);
+    body=`<div class="toolbar"><select onchange="go('compare',{cmpYA:this.value})">${years().map(v=>`<option ${v===st.cmpYA?'selected':''} value="${v}">${bn(v)}</option>`).join('')}</select> <b>বনাম</b>
+      <select onchange="go('compare',{cmpYB:this.value})">${years().map(v=>`<option ${v===st.cmpYB?'selected':''} value="${v}">${bn(v)}</option>`).join('')}</select></div>
+    <div class="grid g3">
+      <div class="card stat e"><div class="lbl">খরচ ${bn(st.cmpYB)}</div><div class="val exp">${tk(sum(B,'expense'))}</div><div class="sub">${cmpTxt(sum(B,'expense'),sum(A,'expense'),bn(st.cmpYA))}</div></div>
+      <div class="card stat i"><div class="lbl">আয় ${bn(st.cmpYB)}</div><div class="val inc">${tk(sum(B,'income'))}</div><div class="sub">${cmpTxt(sum(B,'income'),sum(A,'income'),bn(st.cmpYA),false)}</div></div>
+      <div class="card stat b"><div class="lbl">সঞ্চয় ${bn(st.cmpYB)}</div><div class="val bal">${tk(sum(B,'income')-sum(B,'expense'))}</div><div class="sub">${bn(st.cmpYA)}: ${tk(sum(A,'income')-sum(A,'expense'))}</div></div></div>
+    <div class="card mt"><h3>মাসওয়ারি খরচ</h3>${bars(MONS,[{name:bn(st.cmpYA),color:'#9aa6b8',values:MONS.map((_,i)=>sum(inPrefix(st.cmpYA+'-'+pad(i+1)),'expense'))},{name:bn(st.cmpYB),color:'var(--exp)',values:MONS.map((_,i)=>sum(inPrefix(st.cmpYB+'-'+pad(i+1)),'expense'))}])}</div>
+    <div class="card mt"><h3>খাত অনুযায়ী</h3>${catCompare(B,A,null,bn(st.cmpYA),'',bn(st.cmpYB))}</div>`;
+  }else{
+    const ys=years().slice(-6);
+    body=`<div class="card"><h3>সব বছরের মাসিক খরচ একসাথে</h3>${lines(MONS,ys.map((y,j)=>({name:bn(y),color:YCOL[j%6],values:MONS.map((_,i)=>sum(inPrefix(y+'-'+pad(i+1)),'expense'))})))}</div>
+    <div class="card mt"><h3>বছরওয়ারি সারসংক্ষেপ</h3><div class="tw"><table><thead><tr><th>বছর</th><th>আয়</th><th>খরচ</th><th>সঞ্চয়</th><th>খরচ পরিবর্তন</th></tr></thead><tbody>
+    ${years().map((y,i,a)=>{const L=inPrefix(y),E=sum(L,'expense'),I=sum(L,'income'),pE=i?sum(inPrefix(a[i-1]),'expense'):0;return `<tr class="click" onclick="go('yearly',{year:'${y}'})"><td>${bn(y)}</td><td class="inc">${tk(I)}</td><td class="exp">${tk(E)}</td><td>${tk(I-E)}</td><td>${pE?`<span class="${E>pE?'up':'down'}">${pct(E,pE)}</span>`:'–'}</td></tr>`}).join('')}</tbody></table></div></div>`;
+  }
+  return `<div class="seg" style="margin-bottom:14px">${[['month','মাস বনাম মাস'],['year','বছর বনাম বছর'],['all','সব বছর']].map(([k,t])=>`<button class="${md===k?'on n':''}" onclick="go('compare',{cmpMode:'${k}'})">${t}</button>`).join('')}</div>`+body;
+}
+
+/* ================= খাত ও আইটেম ================= */
+function vItems(){
+  const blk=t=>{const S=sugg(t);const L=live().filter(e=>e.type===t);
+    const tot=c=>L.filter(e=>e.category===c).reduce((a,e)=>a+ +e.amount,0);
+    return S.cats.map(c=>{const its=Object.keys(S.items).filter(k=>S.items[k].cat===c);
+      return `<div class="row"><div class="t"><b>${esc(c)}</b><small>${bn(S.catCount[c]||0)}টি এন্ট্রি · মোট ${tk(tot(c))}${its.length?' · '+its.slice(0,8).map(esc).join(', ')+(its.length>8?' …':''):''}</small></div>
+      <button class="ib" title="ড্রপডাউন থেকে সরান" onclick="hideSugg('${t}','c',this.dataset.k)" data-k="${esc(c)}">🙈</button></div>`}).join('');};
+  const hid=(cfg.hidden||[]);
+  return `<div class="card"><h3>নতুন খাত/আইটেম ড্রপডাউনে যোগ করুন <small>এন্ট্রি লিখলে এমনিতেই যোগ হয়ে যায়</small></h3>
+    <div class="toolbar"><select id="nT"><option value="expense">খরচ</option><option value="income">আয়</option></select>
+    <input id="nC" placeholder="খাত (যেমন: গাড়ি)"><input id="nI" placeholder="আইটেম (ঐচ্ছিক, যেমন: পেট্রোল)"><button class="btn p" onclick="addSugg()">যোগ করুন</button></div></div>
+  <div class="grid g2 mt"><div class="card"><h3 class="exp">খরচের খাত</h3>${blk('expense')}</div><div class="card"><h3 class="inc">আয়ের খাত</h3>${blk('income')}</div></div>
+  ${hid.length?`<div class="card mt"><h3>ড্রপডাউন থেকে লুকানো</h3>${hid.map((h,i)=>`<span class="chip" onclick="unhide(${i})">${esc(h.split('|')[2])} ↺</span> `).join('')}</div>`:''}`;
+}
+function addSugg(){const c=nC.value.trim(),i=nI.value.trim();if(!c&&!i)return;cfg.extra.push({type:nT.value,cat:c,item:i});persist();toast('ড্রপডাউনে যোগ হয়েছে');render();}
+function hideSugg(t,k,n){cfg.hidden.push(t+'|'+k+'|'+n);persist();render();}
+function unhide(i){cfg.hidden.splice(i,1);persist();render();}
+
+/* ================= সিঙ্ক (Google Sheet) ================= */
+let syncing=false,lastErr='';
+/* Apps Script ওয়েব অ্যাপ হিসেবে খুললে সরাসরি Sheet-এর সাথে যুক্ত, URL লাগে না */
+const GAS=!!(window.google&&google.script&&google.script.run);
+const hasSync=()=>GAS||!!cfg.url;
+function callServer(changes){
+  if(GAS)return new Promise((res,rej)=>google.script.run.withSuccessHandler(res).withFailureHandler(rej).syncChanges(changes));
+  return fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'sync',changes})}).then(r=>r.json());
+}
+function syncBadge(){
+  const b=document.getElementById('badge');const p=db.filter(e=>e.dirty).length;
+  let cls='',txt='';
+  if(!hasSync()){txt=p?`📴 শুধু এই ডিভাইসে`:'📴 সিঙ্ক বন্ধ';}
+  else if(syncing){cls='busy';txt='🔄 সিঙ্ক হচ্ছে…';}
+  else if(!navigator.onLine){cls='off';txt=`📴 অফলাইন${p?' · '+bn(p)+'টি বাকি':''}`;}
+  else if(lastErr){cls='err';txt='⚠️ সিঙ্ক ব্যর্থ';}
+  else{cls=p?'off':'ok';txt=p?`⏳ ${bn(p)}টি বাকি`:'✅ সিঙ্ক হয়েছে';}
+  b.className='badge '+cls;b.textContent=txt;
+  document.getElementById('sidefoot').innerHTML=`মোট এন্ট্রি: <b>${bn(live().length)}</b><br>${cfg.lastSync?'শেষ সিঙ্ক: '+bn(new Date(cfg.lastSync).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})):'এখনো সিঙ্ক হয়নি'}`;
+}
+async function sync(manual){
+  if(!hasSync()||syncing){syncBadge();return;}
+  if(!navigator.onLine){syncBadge();if(manual)toast('ইন্টারনেট নেই — অনলাইনে এলে নিজে থেকে সিঙ্ক হবে');return;}
+  syncing=true;syncBadge();
+  const pending=db.filter(e=>e.dirty).map(e=>({id:e.id,date:e.date,type:e.type,category:e.category,item:e.item,amount:e.amount,note:e.note,updatedAt:e.updatedAt,deleted:!!e.deleted}));
+  try{
+    const j=await callServer(pending);if(!j||!j.ok)throw new Error(j.error||'সার্ভার ত্রুটি');
+    const map=new Map(db.map(e=>[e.id,e]));
+    pending.forEach(p=>{const m=map.get(p.id);if(m&&m.updatedAt===p.updatedAt)delete m.dirty;});
+    (j.rows||[]).forEach(s=>{s.amount=+s.amount||0;s.updatedAt=+s.updatedAt||0;s.deleted=s.deleted===true||s.deleted==='TRUE'||s.deleted==='true';s.date=String(s.date).slice(0,10);
+      const l=map.get(s.id);if(!l||(!l.dirty&&s.updatedAt>=l.updatedAt)||s.updatedAt>l.updatedAt)map.set(s.id,s);});
+    db=[...map.values()];cfg.lastSync=Date.now();lastErr='';persist();
+    syncing=false;
+    if(document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName)&&st.view==='entry'){syncBadge();}else render();
+    if(manual)toast('সিঙ্ক সম্পূর্ণ ✓');
+  }catch(err){syncing=false;lastErr=String(err.message||err);syncBadge();if(manual)toast('সিঙ্ক হয়নি: '+lastErr);}
+}
+window.addEventListener('online',()=>{toast('অনলাইন — সিঙ্ক হচ্ছে');sync();});
+window.addEventListener('offline',syncBadge);
+setInterval(()=>sync(),60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync();});
+
+/* ================= সেটিংস ================= */
+function vSettings(){
+  const p=db.filter(e=>e.dirty).length;
+  return `<div class="grid g2">
+  ${GAS?`<div class="card"><h3>অনলাইন সিঙ্ক (Google Sheet)</h3>
+    <p style="font-size:14px">✅ এই অ্যাপ সরাসরি আপনার Google Sheet-এর সাথে যুক্ত — কোনো URL বসাতে হবে না।</p>
+    <p class="hint" style="font-size:13.5px">নেট চলে গেলেও অ্যাপ খোলা থাকলে লিখতে পারবেন; নেট এলে নিজে থেকেই Sheet-এ চলে যাবে।</p>
+    <div class="toolbar"><button class="btn p" onclick="sync(true)">এখনই সিঙ্ক</button></div>
+    <div class="hint">অবস্থা: ${navigator.onLine?'অনলাইন':'অফলাইন'} · সিঙ্ক বাকি: ${bn(p)}টি ${lastErr?'<br><span class="exp">ত্রুটি: '+esc(lastErr)+'</span>':''}</div></div>`:
+  `<div class="card"><h3>অনলাইন সিঙ্ক (Google Sheet)</h3>
+    <p class="hint" style="font-size:13.5px">অফলাইনে যা লিখবেন সব এই ডিভাইসে জমা থাকবে। ইন্টারনেট এলে নিজে থেকেই Google Sheet-এ চলে যাবে, আর অন্য ফোন/কম্পিউটারের এন্ট্রিও এখানে চলে আসবে।</p>
+    <label class="hint">Apps Script Web App URL</label>
+    <input type="url" id="sUrl" style="width:100%;margin:6px 0 10px" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(cfg.url)}">
+    <div class="toolbar"><button class="btn p" onclick="cfg.url=sUrl.value.trim();lastErr='';persist();toast('সংরক্ষিত');sync(true)">সংরক্ষণ ও সিঙ্ক</button>
+    <button class="btn" onclick="sync(true)">এখনই সিঙ্ক</button>${cfg.url?`<button class="btn d" onclick="if(confirm('সিঙ্ক বন্ধ করবেন?')){cfg.url='';persist();render()}">সিঙ্ক বন্ধ</button>`:''}</div>
+    <div class="hint">অবস্থা: ${navigator.onLine?'অনলাইন':'অফলাইন'} · সিঙ্ক বাকি: ${bn(p)}টি ${lastErr?'<br><span class="exp">ত্রুটি: '+esc(lastErr)+'</span>':''}</div>
+    <h4 style="margin:18px 0 6px">কীভাবে সেট করবেন</h4>
+    <ol class="steps" style="font-size:13.5px;padding-left:20px">
+      <li>Google Drive-এ নতুন একটি Google Sheet খুলুন।</li>
+      <li><b>এক্সটেনশন → Apps Script</b>-এ গিয়ে <code>Code.gs</code> ফাইলের কোড পেস্ট করে সেভ করুন।</li>
+      <li><b>Deploy → New deployment → Web app</b>; Execute as: <b>Me</b>, Who has access: <b>Anyone</b>।</li>
+      <li>যে URL পাবেন (…/exec) সেটা উপরের বক্সে বসিয়ে “সংরক্ষণ ও সিঙ্ক” চাপুন।</li>
+      <li>অন্য ফোন/ল্যাপটপেও এই ফাইল খুলে একই URL দিলে সব ডিভাইসে একই হিসাব থাকবে।</li></ol>
+  </div>`}
+  <div class="card"><h3>ব্যাকআপ ও ডেটা</h3>
+    <div class="toolbar"><button class="btn" onclick="exportJSON()">⬇️ ব্যাকআপ (JSON)</button><button class="btn" onclick="exportCSV()">⬇️ Excel-এর জন্য CSV</button>
+    <label class="btn" style="margin:0">⬆️ ব্যাকআপ ফেরত আনুন<input type="file" accept=".json" style="display:none" onchange="importJSON(this.files[0])"></label></div>
+    <p class="hint">মোট ${bn(live().length)}টি এন্ট্রি এই ডিভাইসে আছে।</p>
+    <h4 style="margin:18px 0 6px">অফলাইনে ব্যবহার</h4>
+    <p class="hint" style="font-size:13.5px">অ্যাপটি একবার ইনস্টল করলে (উপরের 📲 ইনস্টল বোতাম বা Chrome মেনু ⋮ → “Install app”) হোম স্ক্রিন থেকে ইন্টারনেট ছাড়াই খুলবে ও চলবে। ব্রাউজারের ডেটা (Clear data) মুছে ফেললে এই ডিভাইসের অ-সিঙ্ক এন্ট্রি হারিয়ে যেতে পারে, তাই সিঙ্ক চালু রাখা ভালো।</p>
+    <button class="btn d mt" onclick="if(confirm('এই ডিভাইসের সব হিসাব মুছে যাবে (Google Sheet-এ থাকা ডেটা থাকবে)। নিশ্চিত?')){db=[];cfg.lastSync=0;persist();render();}">এই ডিভাইসের ডেটা মুছুন</button>
+  </div></div>`;
+}
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);}
+function exportJSON(){dl('bari-hisab-backup-'+today()+'.json',JSON.stringify({entries:db,extra:cfg.extra,hidden:cfg.hidden},null,1),'application/json');}
+function exportCSV(){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=[['তারিখ','ধরন','খাত','বিবরণ','টাকা','নোট']].concat(live().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,e.type==='expense'?'খরচ':'আয়',e.category,e.item,e.amount,e.note]));
+  dl('bari-hisab-'+today()+'.csv','﻿'+rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv');}
+function importJSON(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);const list=j.entries||j;const map=new Map(db.map(e=>[e.id,e]));let n=0;
+  list.forEach(e=>{if(!e.id||!e.date)return;const l=map.get(e.id);if(!l||(+e.updatedAt||0)>(+l.updatedAt||0)){map.set(e.id,Object.assign({},e,{dirty:1}));n++;}});
+  db=[...map.values()];if(j.extra)cfg.extra=j.extra;if(j.hidden)cfg.hidden=j.hidden;persist();render();toast(bn(n)+'টি এন্ট্রি যোগ হয়েছে');sync();}catch(e){toast('ফাইলটি পড়া গেল না')}};r.readAsText(f);}
+
+/* ================= অ্যাপ ইনস্টল ও অফলাইন ================= */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBtn').style.display='inline-block';});
+window.addEventListener('appinstalled',()=>{deferredPrompt=null;document.getElementById('installBtn').style.display='none';toast('অ্যাপ ইনস্টল হয়েছে ✓');});
+async function installApp(){if(!deferredPrompt){toast('Chrome মেনু ⋮ থেকে "Install app" চাপুন');return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBtn').style.display='none';}
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
+
+/* ================= শুরু ================= */
+render();
+sync();
+</script>
+</body>
+</html>
