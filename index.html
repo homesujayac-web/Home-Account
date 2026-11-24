@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1f3b5c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -20,7 +23,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{font-family:"Noto Sans Bengali","Hind Siliguri","Vrinda","Nirmala UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+body{font-family:"Hind Siliguri","Noto Sans Bengali","Nirmala UI","Vrinda",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button,input,select{font:inherit;color:inherit}
 .app{display:flex;min-height:100vh}
 /* sidebar */
@@ -28,10 +31,13 @@ aside{width:236px;background:var(--side);color:#dfe8f5;display:flex;flex-directi
 .banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7e8;border:1px solid #f3d9a6;color:#7a4b06;border-radius:var(--r);padding:12px 16px;margin-bottom:14px;font-size:14px}
 .banner span{flex:1;min-width:180px}
 #installBtn{display:none}
+.backbtn{display:none;border:0;background:#eef1f6;border-radius:9px;font-size:20px;font-weight:700;width:38px;height:38px;cursor:pointer;flex-shrink:0;line-height:1}
+.backbtn.show{display:block}
+.backbtn:hover{background:#e2e7ef}
 .brand{padding:max(20px,env(safe-area-inset-top)) 18px 14px;font-size:19px;font-weight:700;color:#fff;display:flex;gap:10px;align-items:center}
 .brand .logo{width:34px;height:34px;border-radius:10px;background:#ffffff1f;display:grid;place-items:center;font-size:18px}
 nav{padding:6px 10px;flex:1;overflow:auto}
-nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:#cfdbec;padding:11px 12px;border-radius:9px;cursor:pointer;text-align:left;font-size:15px;margin-bottom:2px}
+nav button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:#d6e1f0;padding:11px 12px;border-radius:9px;cursor:pointer;text-align:left;font-size:16px;font-weight:500;margin-bottom:2px}
 nav button:hover{background:#ffffff12}
 nav button.on{background:var(--side2);color:#fff;font-weight:600}
 nav .ic{width:22px;text-align:center;font-size:17px}
@@ -41,9 +47,9 @@ nav .ic{width:22px;text-align:center;font-size:17px}
 /* main */
 main{flex:1;min-width:0;display:flex;flex-direction:column}
 .top{display:flex;align-items:center;gap:10px;padding:max(12px,env(safe-area-inset-top)) 20px 12px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-.top h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top h1{font-size:20px;font-weight:600;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .menu{display:none;border:0;background:none;font-size:22px;cursor:pointer;padding:4px 8px}
-.badge{font-size:12.5px;padding:5px 10px;border-radius:20px;background:#eef2f7;color:var(--mut);white-space:nowrap;cursor:pointer;border:0}
+.badge{font-size:13px;font-weight:500;padding:5px 10px;border-radius:20px;background:#eef2f7;color:var(--mut);white-space:nowrap;cursor:pointer;border:0}
 .badge.ok{background:#e4f5ec;color:#167a4b}.badge.off{background:#fdf0dc;color:#9a5d08}.badge.err{background:#fde6e6;color:#b42a2a}.badge.busy{background:#e6eefc;color:#2453a8}
 .addbtn{border:0;background:var(--acc);color:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600;white-space:nowrap}
 #view{padding:20px;max-width:1180px;width:100%;margin:0 auto}
@@ -53,11 +59,11 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;min-width:0}
-.card h3{margin:0 0 12px;font-size:15.5px;display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
-.card h3 small{font-weight:400;color:var(--mut);font-size:12.5px}
-.stat .lbl{font-size:13px;color:var(--mut)}
+.card h3{margin:0 0 12px;font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.card h3 small{font-weight:400;color:var(--mut);font-size:13px}
+.stat .lbl{font-size:14px;color:var(--mut);font-weight:500}
 .stat .val{font-size:24px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
-.stat .sub{font-size:12.5px;color:var(--mut);margin-top:4px}
+.stat .sub{font-size:13px;color:var(--mut);margin-top:4px}
 .exp{color:var(--exp)}.inc{color:var(--inc)}.bal{color:var(--bal)}
 .up{color:var(--exp)}.down{color:var(--inc)}
 .stat{border-top:3px solid var(--line)}
@@ -76,7 +82,7 @@ input:focus,select:focus{outline:2px solid #2f6fdd55;border-color:var(--acc)}
 .seg button{border:0;background:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--mut)}
 .seg button.on.e{background:var(--exp);color:#fff}.seg button.on.i{background:var(--inc);color:#fff}.seg button.on.n{background:#fff;color:var(--ink);box-shadow:var(--sh)}
 /* form */
-.form label{display:block;font-size:13px;color:var(--mut);margin-bottom:12px}
+.form label{display:block;font-size:14.5px;font-weight:500;color:var(--mut);margin-bottom:12px}
 .form label input{display:block;width:100%;margin-top:5px;font-size:16px;color:var(--ink)}
 .dbox{display:flex;gap:6px;position:relative;margin:5px 0 12px}
 .dbox .dtext{flex:1;font-size:16px;letter-spacing:.5px;font-variant-numeric:tabular-nums;min-width:120px}
@@ -84,7 +90,7 @@ input:focus,select:focus{outline:2px solid #2f6fdd55;border-color:var(--acc)}
 .dcal{border:1px solid #cfd6e1;background:#fff;border-radius:9px;padding:0 12px;cursor:pointer;font-size:17px}
 .dhid{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
-.chip{border:1px solid #d7dde7;background:#f8fafc;border-radius:20px;padding:5px 11px;font-size:13px;cursor:pointer}
+.chip{border:1px solid #d7dde7;background:#f8fafc;border-radius:20px;padding:6px 13px;font-size:14.5px;cursor:pointer}
 .chip:hover{background:#eaf0fb;border-color:#b9c9e6}
 .big{width:100%;padding:12px;font-size:16px}
 /* lists */
@@ -92,34 +98,34 @@ input:focus,select:focus{outline:2px solid #2f6fdd55;border-color:var(--acc)}
 .row:last-child{border-bottom:0}
 .row .t{flex:1;min-width:0}
 .row .t b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row .t small{color:var(--mut);font-size:12.5px}
+.row .t small{color:var(--mut);font-size:13.5px}
 .row .a{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .ib{border:0;background:none;cursor:pointer;padding:4px 6px;border-radius:6px;color:var(--mut);font-size:15px}
 .ib:hover{background:#eef1f6}
 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .pend{font-size:11px;color:var(--warn)}
 .empty{color:var(--mut);text-align:center;padding:24px 8px;font-size:14px}
-table{width:100%;border-collapse:collapse;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:15px}
 th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
-th{font-size:12.5px;color:var(--mut);font-weight:600;background:#f8fafc;position:sticky;top:0}
+th{font-size:13.5px;color:var(--mut);font-weight:600;background:#f8fafc;position:sticky;top:0}
 tr.click{cursor:pointer}tr.click:hover td{background:#f4f8ff}
 tfoot td{font-weight:700;background:#f8fafc}
 .tw{overflow:auto;max-height:520px}
 /* hbars */
 .hb{margin-bottom:10px}
-.hb .l{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:3px;gap:8px}
+.hb .l{display:flex;justify-content:space-between;font-size:14.5px;margin-bottom:3px;gap:8px}
 .hb .l span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hb .tr{height:9px;background:#eef1f6;border-radius:5px;overflow:hidden}
 .hb .f{height:100%;border-radius:5px}
 /* chart */
 .chart{width:100%;height:auto;display:block}
-.chart text{font-size:11px;fill:#7a8494;font-family:inherit}
+.chart text{font-size:12.5px;fill:#5f6b7c;font-weight:500;font-family:inherit}
 .chart .hit{fill:transparent;cursor:pointer}
 .chart .hit:hover{fill:#2f6fdd12}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-top:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px;color:var(--mut);margin-top:6px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.hint{font-size:12px;color:var(--mut);margin-top:4px}
+.hint{font-size:13px;color:var(--mut);margin-top:4px}
 .cmp{font-size:12.5px;font-weight:600}
 /* modal + toast */
 .modal{position:fixed;inset:0;background:#0f1b2b80;display:none;align-items:flex-end;justify-content:center;z-index:100;padding:0}
@@ -160,6 +166,7 @@ ol.steps li{margin-bottom:6px}
   <main>
     <div class="top">
       <button class="menu" onclick="sideToggle(true)" aria-label="মেনু">☰</button>
+      <button class="backbtn" id="backBtn" onclick="handleBack()" aria-label="পিছনে">←</button>
       <h1 id="title">ড্যাশবোর্ড</h1>
       <button class="badge" id="installBtn" style="background:#e6eefc;color:#2453a8" onclick="installApp()">📲 ইনস্টল</button>
       <button class="badge" id="badge" onclick="go('settings')">…</button>
@@ -216,10 +223,13 @@ function cmpTxt(now,prev,label,isExp=true){
 const toDMY=s=>s?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):'';
 function parseDMY(t){const m=String(t).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2}|\d{4})$/);if(!m)return '';let y=m[3].length===2?'20'+m[3]:m[3];const dt=new Date(+y,+m[2]-1,+m[1]);if(dt.getDate()!==+m[1]||dt.getMonth()!==+m[2]-1)return '';return ymd(dt);}
 const DCB={};
-function dateBox(id,val,cb){DCB[id]=cb||null;return `<span class="dbox"><input id="${id}" class="dtext" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" value="${toDMY(val)}" data-ymd="${val}" oninput="dmyType(this)" onchange="dmyCommit(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"><button type="button" class="dcal" title="ক্যালেন্ডার" onclick="dmyPick('${id}')">📅</button><input type="date" class="dhid" id="${id}_p" value="${val}" tabindex="-1" onchange="dmyPicked('${id}',this.value)"></span>`;}
+function fmtTime(ts){const d=new Date(+ts);const h=d.getHours(),m=d.getMinutes();
+  const part=h<5?'রাত':h<12?'সকাল':h<16?'দুপুর':h<18?'বিকেল':h<20?'সন্ধ্যা':'রাত';
+  return part+' '+bn((h%12||12)+':'+pad(m));}
+function dateBox(id,val,cb){DCB[id]=cb||null;return `<span class="dbox"><input id="${id}" class="dtext" inputmode="numeric" autocomplete="off" placeholder="dd/mm/yyyy" maxlength="10" value="${toDMY(val)}" data-ymd="${val}" oninput="dmyType(this,event)" onchange="dmyCommit(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"><button type="button" class="dcal" title="ক্যালেন্ডার" onclick="dmyPick('${id}')">📅</button><input type="date" class="dhid" id="${id}_p" value="${val}" tabindex="-1" onchange="dmyPicked('${id}',this.value)"></span>`;}
 const dval=id=>{const el=document.getElementById(id);return el?el.dataset.ymd:'';};
 function setDval(id,v){const el=document.getElementById(id);if(!el)return;el.dataset.ymd=v;el.value=toDMY(v);const p=document.getElementById(id+'_p');if(p)p.value=v;}
-function dmyType(el){let d=el.value.replace(/\D/g,'').slice(0,8);if(d.length>4)d=d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);else if(d.length>2)d=d.slice(0,2)+'/'+d.slice(2);el.value=d;if(d.length===10){const v=parseDMY(d);if(v&&v!==el.dataset.ymd)dmyCommit(el);}}
+function dmyType(el,ev){if(ev&&ev.inputType&&ev.inputType.startsWith('delete'))return;let d=el.value.replace(/\D/g,'').slice(0,8);if(d.length>4)d=d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);else if(d.length>2)d=d.slice(0,2)+'/'+d.slice(2);el.value=d;if(d.length===10){const v=parseDMY(d);if(v&&v!==el.dataset.ymd)dmyCommit(el);}}
 function dmyCommit(el){const v=parseDMY(el.value);if(!v){toast('তারিখ ঠিক নয় — যেমন ২৪/১১/২০২৬ (24/11/2026)');el.value=toDMY(el.dataset.ymd);return;}if(v===el.dataset.ymd){el.value=toDMY(v);return;}setDval(el.id,v);if(DCB[el.id])DCB[el.id](v);}
 function dmyPick(id){const p=document.getElementById(id+'_p');try{p.showPicker();}catch(e){p.style.pointerEvents='auto';p.focus();p.click();}}
 function dmyPicked(id,v){if(!v)return;setDval(id,v);if(DCB[id])DCB[id](v);}
@@ -247,7 +257,8 @@ const VIEWS=[
 ];
 const st={view:'dash',date:today(),month:today().slice(0,7),year:today().slice(0,4),editId:null,etype:'expense',cmpMode:'month',cmpA:addMonth(today().slice(0,7),-1),cmpB:today().slice(0,7),cmpYA:String(+today().slice(0,4)-1),cmpYB:today().slice(0,4)};
 function renderNav(){document.getElementById('nav').innerHTML=VIEWS.map(([k,i,t])=>`<button class="${st.view===k?'on':''}" onclick="go('${k}')"><span class="ic">${i}</span>${t}</button>`).join('');}
-function go(v,opts={}){Object.assign(st,opts);if(v!=='entry')st.editId=opts.editId||null;st.view=v;sideToggle(false);render();window.scrollTo(0,0);}
+let navStack=[];
+function go(v,opts={}){if(v!==st.view){navStack.push({view:st.view,date:st.date,month:st.month,year:st.year,cmpMode:st.cmpMode});if(navStack.length>30)navStack.shift();}Object.assign(st,opts);if(v!=='entry')st.editId=opts.editId||null;st.view=v;sideToggle(false);render();window.scrollTo(0,0);}
 function sideToggle(o){document.getElementById('side').classList.toggle('open',o);document.getElementById('ovl').classList.toggle('show',o);}
 function openEntry(){go('entry',{editId:null});}
 function render(){
@@ -256,6 +267,7 @@ function render(){
   const v=document.getElementById('view');
   v.innerHTML=({dash:vDash,entry:vEntry,daily:vDaily,monthly:vMonthly,yearly:vYearly,compare:vCompare,items:vItems,settings:vSettings})[st.view]();
   if(st.view==='entry')entryInit();
+  document.getElementById('backBtn').classList.toggle('show',st.view!=='dash');
   document.querySelector('.fab').style.visibility=st.view==='entry'?'hidden':'';
   syncBadge();
 }
@@ -301,13 +313,13 @@ const YCOL=['#2f6fdd','#d64545','#1f9d63','#d98a1c','#8b5cf6','#0ea5b7'];
 /* ================= এন্ট্রি তালিকা ================= */
 function rowHtml(e,showDate){
   return `<div class="row"><span class="dot" style="background:${e.type==='expense'?'var(--exp)':'var(--inc)'}"></span>
-  <div class="t"><b>${esc(e.item||e.category)}</b><small>${esc(e.category)}${showDate?' · '+bn(e.date.slice(8))+' '+MONS[+e.date.slice(5,7)-1]:''}${e.note?' · '+esc(e.note):''}${e.dirty?' · <span class="pend">সিঙ্ক বাকি</span>':''}</small></div>
+  <div class="t"><b>${esc(e.item||e.category)}</b><small>${e.createdAt?'🕒 '+fmtTime(e.createdAt)+' · ':''}${esc(e.category)}${showDate?' · '+bn(e.date.slice(8))+' '+MONS[+e.date.slice(5,7)-1]:''}${e.note?' · '+esc(e.note):''}${e.dirty?' · <span class="pend">সিঙ্ক বাকি</span>':''}</small></div>
   <div class="a ${e.type==='expense'?'exp':'inc'}">${e.type==='expense'?'−':'+'}${tk(e.amount)}</div>
   <button class="ib" title="সম্পাদনা" onclick="closeModal();go('entry',{editId:'${e.id}'})">✏️</button>
   <button class="ib" title="মুছুন" onclick="delEntry('${e.id}')">🗑️</button></div>`;
 }
 function dayDetail(date){
-  const L=live().filter(e=>e.date===date);const ex=L.filter(e=>e.type==='expense'),inc=L.filter(e=>e.type==='income');
+  const L=live().filter(e=>e.date===date);L.sort((a,b)=>(a.createdAt||a.updatedAt||0)-(b.createdAt||b.updatedAt||0));const ex=L.filter(e=>e.type==='expense'),inc=L.filter(e=>e.type==='income');
   const E=sum(L,'expense'),I=sum(L,'income');
   return `<div class="grid g3" style="margin:10px 0 6px">
     <div class="stat e card" style="box-shadow:none;background:#fbf3f3;padding:10px"><div class="lbl">খরচ</div><div class="val exp" style="font-size:18px">${tk(E)}</div></div>
@@ -371,6 +383,7 @@ function vEntry(){
     <label>বিবরণ / কী কিনলেন<input id="fItem" list="dlItem" autocomplete="off" placeholder="${t==='expense'?'যেমন: আলু, চাল, দুধ':'যেমন: নভেম্বরের বেতন'}" value="${esc(ed?ed.item:'')}"></label>
     <label>টাকার পরিমাণ (₹)<input type="number" id="fAmt" inputmode="decimal" min="0" step="any" placeholder="০" value="${ed?ed.amount:''}"></label>
     <label>নোট (ঐচ্ছিক)<input id="fNote" autocomplete="off" value="${esc(ed?ed.note:'')}"></label>
+    <div class="hint" style="margin:-4px 0 12px">🕒 সময়: ${ed&&ed.createdAt?fmtTime(ed.createdAt)+' (লেখার সময়)':'সংরক্ষণ করলে এখনকার সময় নিজে থেকে বসে যাবে'}</div>
     <div class="hint" style="margin:-4px 0 6px">বারবার ব্যবহৃত (চাপলেই বসে যাবে):</div>
     <div class="chips" id="chips"></div>
     <button class="btn p big" onclick="saveEntry()">${ed?'পরিবর্তন সংরক্ষণ':'সংরক্ষণ করুন'}</button>
@@ -419,7 +432,7 @@ function saveEntry(){
   const cat=f.cat.trim()||(sugg(st.etype).items[f.item.trim()]||{}).cat||'অন্যান্য';
   const rec={date:f.date,type:st.etype,category:cat,item:f.item.trim(),amount:Math.round(amt*100)/100,note:f.note.trim(),updatedAt:Date.now(),deleted:false,dirty:1};
   if(st.editId){const e=db.find(x=>x.id===st.editId);Object.assign(e,rec);st.editId=null;toast('পরিবর্তন সংরক্ষিত ✓');persist();st.date=f.date;render();}
-  else{db.push(Object.assign({id:uid()},rec));persist();toast((st.etype==='expense'?'খরচ':'আয়')+' সংরক্ষিত ✓');st.date=f.date;
+  else{db.push(Object.assign({id:uid(),createdAt:Date.now()},rec));persist();toast((st.etype==='expense'?'খরচ':'আয়')+' সংরক্ষিত ✓');st.date=f.date;
     // ফর্ম আবার নতুন করে (ড্রপডাউন আপডেট হবে), তারিখ-খাত রেখে
     render();fCat.value=cat;fillItems();fItem.focus();}
   sync();
@@ -580,12 +593,12 @@ async function sync(manual){
   if(!hasSync()||syncing){syncBadge();return;}
   if(!navigator.onLine){syncBadge();if(manual)toast('ইন্টারনেট নেই — অনলাইনে এলে নিজে থেকে সিঙ্ক হবে');return;}
   syncing=true;syncBadge();
-  const pending=db.filter(e=>e.dirty).map(e=>({id:e.id,date:e.date,type:e.type,category:e.category,item:e.item,amount:e.amount,note:e.note,updatedAt:e.updatedAt,deleted:!!e.deleted}));
+  const pending=db.filter(e=>e.dirty).map(e=>({id:e.id,date:e.date,type:e.type,category:e.category,item:e.item,amount:e.amount,note:e.note,updatedAt:e.updatedAt,deleted:!!e.deleted,createdAt:e.createdAt||''}));
   try{
     const j=await callServer(pending);if(!j||!j.ok)throw new Error(j.error||'সার্ভার ত্রুটি');
     const map=new Map(db.map(e=>[e.id,e]));
     pending.forEach(p=>{const m=map.get(p.id);if(m&&m.updatedAt===p.updatedAt)delete m.dirty;});
-    (j.rows||[]).forEach(s=>{s.amount=+s.amount||0;s.updatedAt=+s.updatedAt||0;s.deleted=s.deleted===true||s.deleted==='TRUE'||s.deleted==='true';s.date=String(s.date).slice(0,10);
+    (j.rows||[]).forEach(s=>{s.amount=+s.amount||0;s.updatedAt=+s.updatedAt||0;s.createdAt=+s.createdAt||0;s.deleted=s.deleted===true||s.deleted==='TRUE'||s.deleted==='true';s.date=String(s.date).slice(0,10);
       const l=map.get(s.id);if(!l||(!l.dirty&&s.updatedAt>=l.updatedAt)||s.updatedAt>l.updatedAt)map.set(s.id,s);});
     db=[...map.values()];cfg.lastSync=Date.now();lastErr='';persist();
     syncing=false;
@@ -634,7 +647,7 @@ function vSettings(){
 function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);}
 function exportJSON(){dl('bari-hisab-backup-'+today()+'.json',JSON.stringify({entries:db,extra:cfg.extra,hidden:cfg.hidden},null,1),'application/json');}
 function exportCSV(){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const rows=[['তারিখ','ধরন','খাত','বিবরণ','টাকা','নোট']].concat(live().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[toDMY(e.date),e.type==='expense'?'খরচ':'আয়',e.category,e.item,e.amount,e.note]));
+  const rows=[['তারিখ','সময়','ধরন','খাত','বিবরণ','টাকা','নোট']].concat(live().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[toDMY(e.date),e.createdAt?new Date(e.createdAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'',e.type==='expense'?'খরচ':'আয়',e.category,e.item,e.amount,e.note]));
   dl('bari-hisab-'+today()+'.csv','﻿'+rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv');}
 function importJSON(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);const list=j.entries||j;const map=new Map(db.map(e=>[e.id,e]));let n=0;
   list.forEach(e=>{if(!e.id||!e.date)return;const l=map.get(e.id);if(!l||(+e.updatedAt||0)>(+l.updatedAt||0)){map.set(e.id,Object.assign({},e,{dirty:1}));n++;}});
@@ -647,6 +660,23 @@ window.addEventListener('appinstalled',()=>{deferredPrompt=null;document.getElem
 async function installApp(){if(!deferredPrompt){toast('Chrome মেনু ⋮ থেকে "Install app" চাপুন');return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBtn').style.display='none';}
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
+
+/* ================= পিছনে যাওয়া (Back) ================= */
+function handleBack(){
+  if(document.getElementById('modal').classList.contains('show')){closeModal();return true;}
+  if(document.getElementById('side').classList.contains('open')){sideToggle(false);return true;}
+  if(navStack.length){const p=navStack.pop();Object.assign(st,p);st.editId=null;render();window.scrollTo(0,0);return true;}
+  if(st.view!=='dash'){st.view='dash';st.editId=null;render();return true;}
+  return false;
+}
+// ফোনের Back বোতাম/জেসচার চাপলে অ্যাপ বন্ধ না হয়ে আগের পাতায় যাবে
+let lastBack=0;
+try{history.replaceState({base:1},'');history.pushState({trap:1},'');}catch(e){}
+window.addEventListener('popstate',()=>{
+  if(handleBack()){history.pushState({trap:1},'');return;}
+  if(Date.now()-lastBack<2000){history.back();return;}
+  lastBack=Date.now();toast('বের হতে আবার Back চাপুন');history.pushState({trap:1},'');
+});
 
 /* ================= শুরু ================= */
 render();
